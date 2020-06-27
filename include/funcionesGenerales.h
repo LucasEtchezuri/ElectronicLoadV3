@@ -27,7 +27,8 @@ void inicializarEstado(void)
 
 void setearVolt(uint mv, uint vMax)
 {
-  float tmp = (65536 / (float)vMax / 10);
+  float tmp = (65535.0 / vMax);
+  
   uint x = mv * tmp;
   // if (mv>40000){
   //  x=65535;
@@ -37,10 +38,11 @@ void setearVolt(uint mv, uint vMax)
   uint8_t xlow = x & 0xff;
   uint8_t xhigh = (x >> 8);
 
-  digitalWrite(CS_DAC, LOW); // SS is pin 10
+  
+  digitalWrite(CS_DAC_A, LOW); // SS is pin 10
   tft.spiwrite(xhigh);
   tft.spiwrite(xlow);
-  digitalWrite(CS_DAC, HIGH);
+  digitalWrite(CS_DAC_A, HIGH);
 }
 
 void ISRencoder()

@@ -65,24 +65,29 @@ float CORRECCION_CORRIENTE = 0.0;
 
 void setup(void)
 {
-  setearVolt(0, 3300); // Lo primeor que hago por seguridad seteo 0 a la salida del DAC
   Serial.begin(115200);
+  delay(1000);
   pinMode(encoderA, INPUT);        // ENCODER entrada A
   pinMode(encoderB, INPUT);        // ENCODER entrada B
   pinMode(encoderButton, INPUT);   // ENCODER button
   pinMode(touchIRQ, INPUT);        // TOUCH IRQ
-  pinMode(CS_DAC, OUTPUT);         // CS DAC
+  pinMode(CS_DAC_A, OUTPUT);       // CS DAC
   pinMode(conversionReady, INPUT); // ADC ready conversion
-  pinMode(tempInterna, INPUT);     // Temp Interna
-  pinMode(tempDisipador, INPUT);   // Temp Disipador
-  pinMode(tempDUT, INPUT);         // Temp DUT
-  pinMode(fanInterno, OUTPUT);     // Fan Interno PWM
-  pinMode(fanDisipador, OUTPUT);   // Fan Externo PWM
-  pinMode(buzzer, OUTPUT);         // Buzzer
-  pinMode(vSense, INPUT);          // Sensor Voltaje
+  //pinMode(tempInterna, INPUT);     // Temp Interna
+  pinMode(tempDisipador, INPUT); // Temp Disipador
+  pinMode(tempDUT, INPUT);       // Temp DUT
+  pinMode(fanDisipador, OUTPUT); // Fan Externo PWM
+  pinMode(buzzer, OUTPUT);       // Buzzer
+  pinMode(vSelect, OUTPUT);      // Sensor Voltaje
+  //pinMode(regulacionEnable, OUTPUT);      // Sensor Voltaje
+
+  
+
+  
+  setearVolt(3000, 4100); // Lo primeor que hago por seguridad seteo 0 a la salida del DAC
 
   ledcSetup(0, 15000, 8);
-  
+
   ledcAttachPin(fanDisipador, 0);
 
   Wire.begin();
@@ -96,14 +101,14 @@ void setup(void)
   cargarCoordenadas(); // setea los valores de coordenadas de TFT de las opciones
   inicializarEstado(); // inicializa las variables de la estructura estado.
 
-  digitalWrite(CS_DAC, HIGH); // Me aseguro que chipSelect del DAC no esta activado
+  digitalWrite(CS_DAC_A, HIGH); // Me aseguro que chipSelect del DAC no esta activado
 
-  adc.initialize();
-  adc.setMode(ADS1115_MODE_SINGLESHOT);
-  adc.setRate(ADS1115_RATE_128);  // Velocidad de muestreo.  860 es el maximo
-  adc.setGain(ADS1115_PGA_6P144); // Seteo ganancia de 6.144 volts
-  adc.setMultiplexer(ADS1115_MUX_P0_NG);
-  adc.setConversionReadyPinMode(); // Activo el pin de Ready convertion.  0=conviertiendo   1=listo la conversion
+  //adc.initialize();
+  //adc.setMode(ADS1115_MODE_SINGLESHOT);
+  //adc.setRate(ADS1115_RATE_128);  // Velocidad de muestreo.  860 es el maximo
+  //adc.setGain(ADS1115_PGA_6P144); // Seteo ganancia de 6.144 volts
+  //adc.setMultiplexer(ADS1115_MUX_P0_NG);
+  //adc.setConversionReadyPinMode(); // Activo el pin de Ready convertion.  0=conviertiendo   1=listo la conversion
 
   attachInterrupt(digitalPinToInterrupt(encoderA), ISRencoder, FALLING); // interrupcion sobre pin A del encoder
   attachInterrupt(digitalPinToInterrupt(touchIRQ), ISRtouch, FALLING);   // interrupcion del touch 1=normal   0=Presionado
@@ -121,16 +126,32 @@ void setup(void)
   TFT_Pantalla_SplashScreen(); // Dibujo de la pantall de bienvenida
   TFT_Pantalla_Inicial();      // Dibujo de la pantalla principal y los elementos fijos
   TFT_Set();                   // Dibujo el numero seteado
+  Serial.println("Termino Setup");
 }
 
 void loop()
 {
+
+  while (1)
+  {
+    
+    //digitalWrite(13, LOW);
+    
+    setearVolt(2000, 4100); // Lo primeor que hago por seguridad seteo 0 a la salida del DAC
+    delay(2000);
+    
+    //setearVolt(40000, 3300); // Lo primeor que hago por seguridad seteo 0 a la salida del DAC
+    setearVolt(4000, 4100); // Lo primeor que hago por seguridad seteo 0 a la salida del DAC
+    delay(2000);
+  }
+
   activacionInterrupcionTouch();   // debounce y activacion de la interrupcion del touch. ya que dentro de ISRtouch, la interrupcion de desactiva para no llamarla mas de una vez.
   activacionInterrupcionEncoder(); // debounce y activacion de la interrupcion del ENCODER
 
   resetDobliClick();
 
-  obtenerCorriente(); // mide la corriente (cada vez que ejecuta mide en un modulo)
+  //obtenerCorriente(); // mide la corriente (cada vez que ejecuta mide en un modulo)
+
   TFT_SpriteCooler(); // Dibuja el sprite del cooler
 
   TFT_DibujaPantallaPrincipal(); // Dibuja la pntalla principal solo si paso el timeout (timeoutMenu)
@@ -171,7 +192,6 @@ void loop()
     actualizarEstadoAnt = millis();
   }
 
-  
   if ((actualizarDisplayAnt == 0) or ((actualizarDisplayAnt + (1000 / FPS_Display)) < millis()))
   {
     TFT_Info();        //Grafica el recuadro de Info con los valores
