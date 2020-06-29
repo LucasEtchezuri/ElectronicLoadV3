@@ -28,17 +28,12 @@ void inicializarEstado(void)
 void setearVolt(uint mv, uint vMax)
 {
   float tmp = (65535.0 / vMax);
-  
+
   uint x = mv * tmp;
-  // if (mv>40000){
-  //  x=65535;
-  // }
-  //Serial.println(x);
 
   uint8_t xlow = x & 0xff;
   uint8_t xhigh = (x >> 8);
 
-  
   digitalWrite(CS_DAC_A, LOW); // SS is pin 10
   tft.spiwrite(xhigh);
   tft.spiwrite(xlow);
@@ -127,25 +122,25 @@ void ISRtouch()
 
 void obtenerCorriente(void)
 {
-  if (conversionActiva and adc.isConversionReady())
+  if (conversionActiva and adc.isDataReady())
   {
     if (adc_entrada == 0)
     {
-      estado.i0 = (adc.getMilliVolts(false) * 10);
+      estado.i0 = (adc.readADC_Single() * 10);
       if (estado.i0 < 0)
         estado.i0 = 0;
       adc_entrada = 2;
     }
     else if (adc_entrada == 1)
     {
-      estado.i1 = (adc.getMilliVolts(false) * 10);
+      estado.i1 = (adc.readADC_Single() * 10);
       if (estado.i1 < 0)
         estado.i1 = 0;
       adc_entrada = 3;
     }
     else if (adc_entrada == 2)
     {
-      estado.temperaturaDisipador = (adc.getMilliVolts(false) - 500) / 10;
+      estado.temperaturaDisipador = (adc.readADC_Single() - 500) / 10;
       estado.temperaturaDisipador = estado.temperaturaDisipador * AJUSTE_TEMP;
       if (estado.coolerDisipadorPotencia > 0)
       {
@@ -159,7 +154,7 @@ void obtenerCorriente(void)
     }
     else if (adc_entrada == 3)
     {
-      estado.v = adc.getMilliVolts(false);
+      estado.v = adc.readADC_Single();
       estado.v = estado.v * 10;
       estado.v = estado.v / CORRECCION_MEDICION_VOLTAJE;
       if (estado.v < 0)
@@ -183,19 +178,19 @@ void obtenerCorriente(void)
   {
     if (adc_entrada == 0)
     {
-      adc.setMultiplexer(ADS1115_MUX_P0_NG);
+      adc.setMultiplexer(0x00);
     }
     if (adc_entrada == 1)
     {
-      adc.setMultiplexer(ADS1115_MUX_P1_NG);
+      adc.setMultiplexer(0x00);
     }
     if (adc_entrada == 2)
     {
-      adc.setMultiplexer(ADS1115_MUX_P2_NG);
+      adc.setMultiplexer(0x00);
     }
     if (adc_entrada == 3)
     {
-      adc.setMultiplexer(ADS1115_MUX_P3_NG);
+      adc.setMultiplexer(0x00);
       obtenerCorrienteAnt = millis();
     }
     conversionActiva = true;

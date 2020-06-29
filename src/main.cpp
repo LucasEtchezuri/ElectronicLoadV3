@@ -3,13 +3,13 @@
 #include <TFT_Touch.h>
 #include <TFT_eSPI.h> // Graphics and font library for ILI9341 driver chip
 #include <SPI.h>
-#include <ADS1115.h>
+#include "ADS1120.h"
 #include "estructuras.h"
 #include "configHard.h"
 
 TFT_Touch touch = TFT_Touch(DCS, DCLK, DIN, DOUT); /* Create an instance of TOUCH */
 TFT_eSPI tft = TFT_eSPI();                         /* Create an instance of TFT screen */
-ADS1115 adc(ADS1115_DEFAULT_ADDRESS);
+ADS1120 adc;
 TFT_eSprite spriteCooler = TFT_eSprite(&tft); // Sprite
 TFT_eSprite spriteProhibidoCambioModo = TFT_eSprite(&tft);
 TFT_eSprite spriteSetCorte = TFT_eSprite(&tft);
@@ -66,13 +66,13 @@ float CORRECCION_CORRIENTE = 0.0;
 void setup(void)
 {
   Serial.begin(115200);
-  delay(1000);
-  pinMode(encoderA, INPUT);        // ENCODER entrada A
-  pinMode(encoderB, INPUT);        // ENCODER entrada B
-  pinMode(encoderButton, INPUT);   // ENCODER button
-  pinMode(touchIRQ, INPUT);        // TOUCH IRQ
-  pinMode(CS_DAC_A, OUTPUT);       // CS DAC
-  pinMode(conversionReady, INPUT); // ADC ready conversion
+  delay(500);
+  pinMode(encoderA, INPUT);      // ENCODER entrada A
+  pinMode(encoderB, INPUT);      // ENCODER entrada B
+  pinMode(encoderButton, INPUT); // ENCODER button
+  pinMode(touchIRQ, INPUT);      // TOUCH IRQ
+  pinMode(CS_DAC_A, OUTPUT);     // CS DAC
+  pinMode(ADC_READY_PIN, INPUT); // ADC ready conversion
   //pinMode(tempInterna, INPUT);     // Temp Interna
   pinMode(tempDisipador, INPUT); // Temp Disipador
   pinMode(tempDUT, INPUT);       // Temp DUT
@@ -81,17 +81,14 @@ void setup(void)
   pinMode(vSelect, OUTPUT);      // Sensor Voltaje
   //pinMode(regulacionEnable, OUTPUT);      // Sensor Voltaje
 
-  
-
-  
-  setearVolt(3000, 4100); // Lo primeor que hago por seguridad seteo 0 a la salida del DAC
-
+  //setearVolt(3000, 4100); // Lo primeor que hago por seguridad seteo 0 a la salida del DAC
   ledcSetup(0, 15000, 8);
-
   ledcAttachPin(fanDisipador, 0);
 
-  Wire.begin();
-
+  adc.begin(ADC_CS_PIN, ADC_READY_PIN);
+  
+  SPI.begin(14, 12, 13);
+  digitalWrite(CS_DAC_A, HIGH); // SS is pin 10
   tft.init();
   tft.setRotation(TFT_ORIENTACION);
 
@@ -101,15 +98,7 @@ void setup(void)
   cargarCoordenadas(); // setea los valores de coordenadas de TFT de las opciones
   inicializarEstado(); // inicializa las variables de la estructura estado.
 
-  digitalWrite(CS_DAC_A, HIGH); // Me aseguro que chipSelect del DAC no esta activado
-
-  //adc.initialize();
-  //adc.setMode(ADS1115_MODE_SINGLESHOT);
-  //adc.setRate(ADS1115_RATE_128);  // Velocidad de muestreo.  860 es el maximo
-  //adc.setGain(ADS1115_PGA_6P144); // Seteo ganancia de 6.144 volts
-  //adc.setMultiplexer(ADS1115_MUX_P0_NG);
-  //adc.setConversionReadyPinMode(); // Activo el pin de Ready convertion.  0=conviertiendo   1=listo la conversion
-
+    
   attachInterrupt(digitalPinToInterrupt(encoderA), ISRencoder, FALLING); // interrupcion sobre pin A del encoder
   attachInterrupt(digitalPinToInterrupt(touchIRQ), ISRtouch, FALLING);   // interrupcion del touch 1=normal   0=Presionado
   //attachInterrupt(digitalPinToInterrupt(conversionReady), ISR_ADC, FALLING); // interrupcion del touch 1=normal   0=Presionado
@@ -127,24 +116,75 @@ void setup(void)
   TFT_Pantalla_Inicial();      // Dibujo de la pantalla principal y los elementos fijos
   TFT_Set();                   // Dibujo el numero seteado
   Serial.println("Termino Setup");
+  
 }
 
 void loop()
 {
 
+  //SPI.begin(14, 12, 13);
+  SPI.setDataMode(SPI_MODE0);
+  uint8_t xhigh = 0;
+  uint8_t xlow = 0;
+
+
+
   while (1)
   {
-    
-    //digitalWrite(13, LOW);
-    
-    setearVolt(2000, 4100); // Lo primeor que hago por seguridad seteo 0 a la salida del DAC
-    delay(2000);
-    
-    //setearVolt(40000, 3300); // Lo primeor que hago por seguridad seteo 0 a la salida del DAC
-    setearVolt(4000, 4100); // Lo primeor que hago por seguridad seteo 0 a la salida del DAC
-    delay(2000);
-  }
+    xhigh = 0;
+    xlow = 0;
 
+    digitalWrite(CS_DAC_A, LOW); // SS is pin 10
+    delayMicroseconds(1);
+    SPI.transfer(xhigh);
+		SPI.transfer(xlow);
+    delayMicroseconds(1);
+    digitalWrite(CS_DAC_A, HIGH);
+
+    delay(2000);
+
+    xhigh = 128;
+    xlow = 0;
+
+    digitalWrite(CS_DAC_A, LOW); // SS is pin 10
+    delayMicroseconds(1);
+    SPI.transfer(xhigh);
+		SPI.transfer(xlow);
+    delayMicroseconds(1);
+    digitalWrite(CS_DAC_A, HIGH);
+
+    delay(2000);
+
+    xhigh = 255;
+    xlow = 0;
+
+    digitalWrite(CS_DAC_A, LOW); // SS is pin 10
+    delayMicroseconds(1);
+    SPI.transfer(xhigh);
+		SPI.transfer(xlow);
+    delayMicroseconds(1);
+    digitalWrite(CS_DAC_A, HIGH);
+
+    delay(2000);
+
+    xhigh = 0;
+    xlow = 10;
+
+    digitalWrite(CS_DAC_A, LOW); // SS is pin 10
+    delayMicroseconds(1);
+    SPI.transfer(xhigh);
+		SPI.transfer(xlow);
+    delayMicroseconds(1);
+    digitalWrite(CS_DAC_A, HIGH);
+
+    delay(2000);
+    Serial.println("Funcionando");
+  }
+  SPI.setDataMode(SPI_MODE1);
+
+
+
+/*
   activacionInterrupcionTouch();   // debounce y activacion de la interrupcion del touch. ya que dentro de ISRtouch, la interrupcion de desactiva para no llamarla mas de una vez.
   activacionInterrupcionEncoder(); // debounce y activacion de la interrupcion del ENCODER
 
@@ -207,4 +247,5 @@ void loop()
   {
     opcionTouch(X_Raw, Y_Raw);
   }
+  */
 }
