@@ -85,11 +85,11 @@ void setup(void)
   ledcSetup(0, 15000, 8);
   ledcAttachPin(fanDisipador, 0);
 
-  adc.begin(ADC_CS_PIN, ADC_READY_PIN);
-  
   SPI.begin(14, 12, 13);
+  adc.begin(ADC_CS_PIN, ADC_READY_PIN);
+
   digitalWrite(CS_DAC_A, HIGH); // SS is pin 10
-  tft.init();
+ // tft.init();
   tft.setRotation(TFT_ORIENTACION);
 
   touch.setCal(HMIN, HMAX, VMIN, VMAX, HRES, VRES, XYSWAP); // Raw xmin, xmax, ymin, ymax, width, height
@@ -98,7 +98,6 @@ void setup(void)
   cargarCoordenadas(); // setea los valores de coordenadas de TFT de las opciones
   inicializarEstado(); // inicializa las variables de la estructura estado.
 
-    
   attachInterrupt(digitalPinToInterrupt(encoderA), ISRencoder, FALLING); // interrupcion sobre pin A del encoder
   attachInterrupt(digitalPinToInterrupt(touchIRQ), ISRtouch, FALLING);   // interrupcion del touch 1=normal   0=Presionado
   //attachInterrupt(digitalPinToInterrupt(conversionReady), ISR_ADC, FALLING); // interrupcion del touch 1=normal   0=Presionado
@@ -116,7 +115,6 @@ void setup(void)
   TFT_Pantalla_Inicial();      // Dibujo de la pantalla principal y los elementos fijos
   TFT_Set();                   // Dibujo el numero seteado
   Serial.println("Termino Setup");
-  
 }
 
 void loop()
@@ -127,8 +125,6 @@ void loop()
   uint8_t xhigh = 0;
   uint8_t xlow = 0;
 
-
-
   while (1)
   {
     xhigh = 0;
@@ -137,35 +133,11 @@ void loop()
     digitalWrite(CS_DAC_A, LOW); // SS is pin 10
     delayMicroseconds(1);
     SPI.transfer(xhigh);
-		SPI.transfer(xlow);
+    SPI.transfer(xlow);
     delayMicroseconds(1);
     digitalWrite(CS_DAC_A, HIGH);
 
-    delay(2000);
-
-    xhigh = 128;
-    xlow = 0;
-
-    digitalWrite(CS_DAC_A, LOW); // SS is pin 10
-    delayMicroseconds(1);
-    SPI.transfer(xhigh);
-		SPI.transfer(xlow);
-    delayMicroseconds(1);
-    digitalWrite(CS_DAC_A, HIGH);
-
-    delay(2000);
-
-    xhigh = 255;
-    xlow = 0;
-
-    digitalWrite(CS_DAC_A, LOW); // SS is pin 10
-    delayMicroseconds(1);
-    SPI.transfer(xhigh);
-		SPI.transfer(xlow);
-    delayMicroseconds(1);
-    digitalWrite(CS_DAC_A, HIGH);
-
-    delay(2000);
+    delay(4000);
 
     xhigh = 0;
     xlow = 10;
@@ -173,7 +145,31 @@ void loop()
     digitalWrite(CS_DAC_A, LOW); // SS is pin 10
     delayMicroseconds(1);
     SPI.transfer(xhigh);
-		SPI.transfer(xlow);
+    SPI.transfer(xlow);
+    delayMicroseconds(1);
+    digitalWrite(CS_DAC_A, HIGH);
+
+    delay(2000);
+
+    xhigh = 0;
+    xlow = 20;
+
+    digitalWrite(CS_DAC_A, LOW); // SS is pin 10
+    delayMicroseconds(1);
+    SPI.transfer(xhigh);
+    SPI.transfer(xlow);
+    delayMicroseconds(1);
+    digitalWrite(CS_DAC_A, HIGH);
+
+    delay(2000);
+
+    xhigh = 0;
+    xlow = 30;
+
+    digitalWrite(CS_DAC_A, LOW); // SS is pin 10
+    delayMicroseconds(1);
+    SPI.transfer(xhigh);
+    SPI.transfer(xlow);
     delayMicroseconds(1);
     digitalWrite(CS_DAC_A, HIGH);
 
@@ -182,9 +178,7 @@ void loop()
   }
   SPI.setDataMode(SPI_MODE1);
 
-
-
-/*
+  /*
   activacionInterrupcionTouch();   // debounce y activacion de la interrupcion del touch. ya que dentro de ISRtouch, la interrupcion de desactiva para no llamarla mas de una vez.
   activacionInterrupcionEncoder(); // debounce y activacion de la interrupcion del ENCODER
 
