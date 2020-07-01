@@ -1,8 +1,8 @@
 struct st_currents
 {
-  unsigned long currentA;
-  unsigned long currentB;
-  unsigned long currentTotal;
+  unsigned long currentA;         // current medida en ma * 100
+  unsigned long currentB;         // current medida en ma * 100
+  unsigned long currentTotal;     // current suma de A + B
 };
 
 struct st_set

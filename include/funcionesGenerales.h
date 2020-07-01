@@ -120,22 +120,41 @@ void ISRtouch()
 void readCurrents(void)
 {
   static byte adc_input = 0;
+  static byte adc_reads = 0;
+  static unsigned long sumaMilliamperes = 0;
 
   if (adc.isDataReady())
   {
     if (adc_input == 0)
     {
-      status.currents.currentA = adc.readADC();
-      status.currents.currentTotal = status.currents.currentA + status.currents.currentB;
-      adc_input = 1;
-      adc.setMultiplexer(0x09);
+      //sumaMilliamperes = sumaMilliamperes + adc.readADC() * MA_MAX / 32767 * 100;
+      Serial.println(adc.readADC());
+      adc_reads++;
+      if (adc_reads >= 10)
+      {
+        status.currents.currentA = (sumaMilliamperes / 10);
+        status.currents.currentTotal = status.currents.currentA + status.currents.currentB;
+        adc.setMultiplexer(0x09);
+        adc_reads = 0;
+        adc_input = 1;
+        sumaMilliamperes = 0;
+        //Serial.println(status.currents.currentA);
+      }
     }
-    else if (adc_input == 1)
+    else
     {
-      status.currents.currentB = adc.readADC();
-      status.currents.currentTotal = status.currents.currentA + status.currents.currentB;
-      adc_input = 0;
-      adc.setMultiplexer(0x08);
+      //sumaMilliamperes = sumaMilliamperes + adc.readADC() * MA_MAX / 32767 * 100;
+      Serial.println(adc.readADC());
+      adc_reads++;
+      if (adc_reads >= 10)
+      {
+        status.currents.currentB = (sumaMilliamperes / 10);
+        status.currents.currentTotal = status.currents.currentA + status.currents.currentB;
+        adc.setMultiplexer(0x08);
+        adc_reads = 0;
+        adc_input = 0;
+        sumaMilliamperes = 0;
+      }
     }
   }
 }

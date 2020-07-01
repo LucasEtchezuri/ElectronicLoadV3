@@ -163,7 +163,6 @@ void TFT_DatosEnPantalla(void)
     tft.setTextColor(TFT_BLACK, TFT_WHITE); // Font blanco.. Sin color de fondo
     tft.setCursor(tft_pos_set_x, tft_pos_set_y);
     tft.drawFloat(set.setCurrent / 1000.00, 3, tft_pos_set_x, tft_pos_set_y + 50);
-    Serial.println("imprimo numero");
   }
 }
 

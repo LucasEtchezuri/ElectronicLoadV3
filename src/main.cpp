@@ -91,14 +91,14 @@ void setup(void)
   //dac.setReference(DAC_REFERENCE);
   //dac.writeDAC(0);
 
-  SPI.begin(14, 12, 13);                // cambiar nueva lib
-  adc.begin(ADC_CS_PIN, ADC_READY_PIN); // cambiar nueva lib
-  adc.setConversionMode(1);             //modo continuo
+  //SPI.begin(14, 12, 13);                // cambiar nueva lib
+  adc.begin(14, 32, 13, ADC_CS_PIN, ADC_READY_PIN); // cambiar nueva lib
+  adc.setGain(1);
+  adc.setConversionMode(0x01);             //modo continuo
   adc.setOpMode(0x02);                  //Turbo Mode
   adc.setDataRate(0x06);                // 2000SPS
   adc.setMultiplexer(0x08);             // AIN0
   
-
   ledcSetup(0, 15000, 8); // Set PWM FAN
   ledcAttachPin(FAN, 0);  // Set PWM FAN
 
@@ -137,13 +137,13 @@ void loop()
   activacionInterrupcionEncoder(); // debounce y activacion de la interrupcion del ENCODER
   resetDobliClick();
 
-  readCurrents(); // mide la corriente (cada vez que ejecuta mide en un modulo)
+  readCurrents(); // mide la corriente (cada vez que ejecuta mide en una entrada diferente).  Promedia 10 lecturas.
   //obtenerCorriente(); // mide la corriente (cada vez que ejecuta mide en un modulo)
 
-  TFT_SpriteCooler(); // Dibuja el sprite del cooler
+  //TFT_SpriteCooler(); // Dibuja el sprite del cooler
 
-  TFT_DibujaPantallaPrincipal(); // Dibuja la pntalla principal solo si paso el timeout (timeoutMenu)
-  TFT_DibujaSetSeleccion();      // Dibuja la pntalla principal solo si paso el timeout (timeoutSetSeleccion)
+  //TFT_DibujaPantallaPrincipal(); // Dibuja la pntalla principal solo si paso el timeout (timeoutMenu)
+  //TFT_DibujaSetSeleccion();      // Dibuja la pntalla principal solo si paso el timeout (timeoutSetSeleccion)
 
 /*
   if ((actualizarEstadoAnt) == 0 or ((actualizarEstadoAnt + (1000 / actualizarEstadoFPS)) < millis()))
@@ -181,7 +181,7 @@ void loop()
     actualizarEstadoAnt = millis();
   }
 
-*/
+
   if ((actualizarDisplayAnt == 0) or ((actualizarDisplayAnt + (1000 / FPS_Display)) < millis()))
   {
     TFT_Info();        //Grafica el recuadro de Info con los valores
@@ -197,5 +197,5 @@ void loop()
   {
     opcionTouch(X_Raw, Y_Raw);
   }
-
+*/
 }

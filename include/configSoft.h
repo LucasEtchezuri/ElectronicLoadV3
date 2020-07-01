@@ -1,3 +1,4 @@
+#define MA_MAX  5000   //  Aca va el valor de MA que representa una salida de 2000mv del INA. (En mi caos use un INA de 400mv por Ampere.  por lo tanto si la salida es 2000mv serian 5000ma)
 // TOUCH
 // These are the default min and maximum values, set to 0 and 4095 to test the screen
 #define HMIN 0
