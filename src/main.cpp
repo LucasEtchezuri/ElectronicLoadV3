@@ -84,9 +84,10 @@ void setup(void)
   //pinMode(REGULATOR_ENABLE, OUTPUT);      // Sensor Voltaje
 
   digitalWrite(REGULATOR_ENABLE, LOW); // disable regulator
-  
 
-  adc.setVoltageRef(ADC_REFERENCE);
+  dac.setReference(DAC_REFERENCE);
+  dac.writeDAC(0);
+  
   SPI.begin(14, 12, 13);                // cambiar nueva lib
   adc.begin(ADC_CS_PIN, ADC_READY_PIN); // cambiar nueva lib
 

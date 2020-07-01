@@ -38,6 +38,6 @@
 #define CANT_MEDIAS_VOLT 50
 #define AJUSTE_TEMP 1.2
 
-#define ADC_REFERENCE 4096          // millivotls
+#define DAC_REFERENCE 4096          // millivotls
 
 
