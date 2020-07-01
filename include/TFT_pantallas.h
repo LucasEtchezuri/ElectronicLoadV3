@@ -10,7 +10,7 @@ void TFT_Pantalla_SplashScreen(void)
   tft.setTextColor(TFT_YELLOW); // Set the font colour to be yellow with no background
   tft.setTextFont(2);           // set to font 7
   tft.setCursor(250, 220);
-  tft.println("Ver: 1.0");
+  tft.println("Ver: 3.0");
 
   delay(timeSplash);
 }

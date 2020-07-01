@@ -1,5 +1,8 @@
 void initStatus(void)
 {
+  currents.currentA = 0;
+  currents.currentB = 0;
+  currents.currentTotal = 0;
   status.currents = currents;
   status.FanRpm = 0;
   status.run = false;
@@ -10,12 +13,12 @@ void initStatus(void)
 
 void initSet(void)
 {
-  status.currents = 0;
-  status.FanRpm = 0;
-  status.run = false;
-  status.temp = 0;
-  status.tempDUT = 0;
-  status.time = 0;
+  set.mode = 1;
+  set.setCurrent = 0;
+  set.tCutOff = 0;
+  set.tempCutOff = 0;
+  set.tempCutOffDUT = 0;
+  set.vCutOff = 0;
 }
 
 void setearVolt(uint mv, uint vMax)
@@ -113,6 +116,30 @@ void ISRtouch()
   touchAnt = millis();
 }
 
+void readCurrents(void)
+{
+  static byte adc_input = 0;
+
+  if (adc.isDataReady())
+  {
+    if (adc_input == 0)
+    {
+      status.currents.currentA = adc.readADC();
+      status.currents.currentTotal = status.currents.currentA + status.currents.currentB;
+      adc_input = 1;
+      adc.setMultiplexer(0x09);
+    }
+    else if (adc_input == 1)
+    {
+      status.currents.currentB = adc.readADC();
+      status.currents.currentTotal = status.currents.currentA + status.currents.currentB;
+      adc_input = 0;
+      adc.setMultiplexer(0x08);
+    }
+  }
+}
+
+/*
 void obtenerCorriente(void)
 {
   if (conversionActiva and adc.isDataReady())
@@ -189,6 +216,8 @@ void obtenerCorriente(void)
     conversionActiva = true;
   }
 }
+
+*/
 
 void actualizarEstado(void)
 {

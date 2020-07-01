@@ -50,7 +50,6 @@ unsigned int FPS_Display = 10;         // Veces por segundo que se actualizan lo
 unsigned int actualizarEstadoFPS = 30; // veces por segundo que se calculan los datos del estado y se actualiza el seteo de corriente
 
 bool conversionActiva = false;
-int adc_entrada = 0;
 int rotacionCooler = 0;
 
 int ant = 7687;
@@ -95,24 +94,17 @@ void setup(void)
   SPI.begin(14, 12, 13);                // cambiar nueva lib
   adc.begin(ADC_CS_PIN, ADC_READY_PIN); // cambiar nueva lib
 
-  ledcSetup(0, 15000, 8);               // Set PWM FAN
-  ledcAttachPin(FAN, 0);                // Set PWM FAN
-  
-
-  tft.init();
-  tft.setRotation(TFT_ORIENTACION);
-  touch.setCal(HMIN, HMAX, VMIN, VMAX, HRES, VRES, XYSWAP); // Raw xmin, xmax, ymin, ymax, width, height
-  touch.setRotation(2);
+  ledcSetup(0, 15000, 8); // Set PWM FAN
+  ledcAttachPin(FAN, 0);  // Set PWM FAN
 
   cargarCoordenadas(); // setea los valores de coordenadas de TFT de las opciones
-  //inicializarEstado(); // inicializa las variables de la estructura estado.
-  initStatus(); // init status structure
-  initSet(); // init set structure
+  initStatus();        // init status structure
+  initSet();           // init set structure
 
   attachInterrupt(digitalPinToInterrupt(ENCODER_A), ISRencoder, FALLING); // interrupcion sobre pin A del encoder
   attachInterrupt(digitalPinToInterrupt(TOUCH_IRQ), ISRtouch, FALLING);   // interrupcion del touch 1=normal   0=Presionado
-  //attachInterrupt(digitalPinToInterrupt(conversionReady), ISR_ADC, FALLING); // interrupcion del touch 1=normal   0=Presionado
 
+  //attachInterrupt(digitalPinToInterrupt(conversionReady), ISR_ADC, FALLING); // interrupcion del touch 1=normal   0=Presionado   // no creo que lo use
   //#define RISING    0x01
   //#define FALLING   0x02
   //#define CHANGE    0x03
@@ -120,6 +112,11 @@ void setup(void)
   //#define ONHIGH    0x05
   //#define ONLOW_WE  0x0C
   //#define ONHIGH_WE 0x0D
+
+  tft.init();
+  tft.setRotation(TFT_ORIENTACION);
+  touch.setCal(HMIN, HMAX, VMIN, VMAX, HRES, VRES, XYSWAP); // Raw xmin, xmax, ymin, ymax, width, height
+  touch.setRotation(2);
 
   TFT_Creacion_Sprites();      // Creacion de los sprites
   TFT_Pantalla_SplashScreen(); // Dibujo de la pantall de bienvenida
@@ -132,70 +129,11 @@ void setup(void)
 void loop()
 {
 
-  //SPI.begin(14, 12, 13);
-  SPI.setDataMode(SPI_MODE0);
-  uint8_t xhigh = 0;
-  uint8_t xlow = 0;
-
-  while (1)
-  {
-    xhigh = 0;
-    xlow = 0;
-
-    digitalWrite(CS_DAC_A, LOW); // SS is pin 10
-    delayMicroseconds(1);
-    SPI.transfer(xhigh);
-    SPI.transfer(xlow);
-    delayMicroseconds(1);
-    digitalWrite(CS_DAC_A, HIGH);
-
-    delay(4000);
-
-    xhigh = 0;
-    xlow = 10;
-
-    digitalWrite(CS_DAC_A, LOW); // SS is pin 10
-    delayMicroseconds(1);
-    SPI.transfer(xhigh);
-    SPI.transfer(xlow);
-    delayMicroseconds(1);
-    digitalWrite(CS_DAC_A, HIGH);
-
-    delay(2000);
-
-    xhigh = 0;
-    xlow = 20;
-
-    digitalWrite(CS_DAC_A, LOW); // SS is pin 10
-    delayMicroseconds(1);
-    SPI.transfer(xhigh);
-    SPI.transfer(xlow);
-    delayMicroseconds(1);
-    digitalWrite(CS_DAC_A, HIGH);
-
-    delay(2000);
-
-    xhigh = 0;
-    xlow = 30;
-
-    digitalWrite(CS_DAC_A, LOW); // SS is pin 10
-    delayMicroseconds(1);
-    SPI.transfer(xhigh);
-    SPI.transfer(xlow);
-    delayMicroseconds(1);
-    digitalWrite(CS_DAC_A, HIGH);
-
-    delay(2000);
-    Serial.println("Funcionando");
-  }
-  SPI.setDataMode(SPI_MODE1);
-
-  /*
   activacionInterrupcionTouch();   // debounce y activacion de la interrupcion del touch. ya que dentro de ISRtouch, la interrupcion de desactiva para no llamarla mas de una vez.
   activacionInterrupcionEncoder(); // debounce y activacion de la interrupcion del ENCODER
-
   resetDobliClick();
 
+  readCurrents(); // mide la corriente (cada vez que ejecuta mide en un modulo)
   //obtenerCorriente(); // mide la corriente (cada vez que ejecuta mide en un modulo)
 
   TFT_SpriteCooler(); // Dibuja el sprite del cooler
@@ -203,6 +141,7 @@ void loop()
   TFT_DibujaPantallaPrincipal(); // Dibuja la pntalla principal solo si paso el timeout (timeoutMenu)
   TFT_DibujaSetSeleccion();      // Dibuja la pntalla principal solo si paso el timeout (timeoutSetSeleccion)
 
+/*
   if ((actualizarEstadoAnt) == 0 or ((actualizarEstadoAnt + (1000 / actualizarEstadoFPS)) < millis()))
   {
 
@@ -238,6 +177,7 @@ void loop()
     actualizarEstadoAnt = millis();
   }
 
+*/
   if ((actualizarDisplayAnt == 0) or ((actualizarDisplayAnt + (1000 / FPS_Display)) < millis()))
   {
     TFT_Info();        //Grafica el recuadro de Info con los valores
@@ -253,5 +193,5 @@ void loop()
   {
     opcionTouch(X_Raw, Y_Raw);
   }
-  */
+
 }
