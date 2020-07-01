@@ -10,7 +10,7 @@ void opcionTouch(int x, int y)
 {
     if (strcmp(estado.pantalla, "prohibido") == 0)
     {
-        TFT_Pantalla_Inicial();
+        TFT_Pantalla_Completa();
         strcpy(estado.pantalla, "principal");
     }
     else if (strcmp(estado.pantalla, "setCorte_V") == 0)
@@ -25,7 +25,7 @@ void opcionTouch(int x, int y)
         }
         else
         {
-            TFT_Pantalla_Inicial();
+            TFT_Pantalla_Completa();
             strcpy(estado.pantalla, "principal");
         }
     }
@@ -41,13 +41,13 @@ void opcionTouch(int x, int y)
         }
         else
         {
-            TFT_Pantalla_Inicial();
+            TFT_Pantalla_Completa();
             strcpy(estado.pantalla, "principal");
         }
     }
     else if (strcmp(estado.pantalla, "setCorte_Temperatura") == 0)
     {
-        TFT_Pantalla_Inicial();
+        TFT_Pantalla_Completa();
         strcpy(estado.pantalla, "principal");
     }
     else if (strcmp(estado.pantalla, "principal") == 0)
@@ -119,7 +119,7 @@ void opcionTouch(int x, int y)
                     estado.setCorteVoltajeMinimo = false;
                 else
                     estado.setCorteVoltajeMinimo = true;
-                TFT_VIN();
+                TFT_CutOffVoltage();
             }
             else
             {
@@ -127,7 +127,7 @@ void opcionTouch(int x, int y)
                     estado.setCorteVoltajeMinimo = false;
                 else
                     estado.setCorteVoltajeMinimo = true;
-                TFT_VIN();
+                TFT_CutOffVoltage();
                 seleccionCorte = 1;
                 strcpy(estado.pantalla, "setCorte_V");
                 timeoutMenu = TIMEOUT_MENU * 1000;
@@ -143,7 +143,7 @@ void opcionTouch(int x, int y)
                     estado.setCorteTiempo = false;
                 else
                     estado.setCorteTiempo = true;
-                TFT_Tiempo();
+                TFT_CutOffTime();
             }
             else
             {
@@ -151,7 +151,7 @@ void opcionTouch(int x, int y)
                     estado.setCorteTiempo = false;
                 else
                     estado.setCorteTiempo = true;
-                TFT_Tiempo();
+                TFT_CutOffTime();
                 seleccionCorte = 1;
                 strcpy(estado.pantalla, "setCorte_Tiempo");
                 timeoutMenu = TIMEOUT_MENU * 1000;
@@ -168,7 +168,7 @@ void opcionTouch(int x, int y)
                     estado.setCorteTemperatura = false;
                 else
                     estado.setCorteTemperatura = true;
-                TFT_Temp();
+                TFT_CutOffTemp();
             }
             else
             {
@@ -176,7 +176,7 @@ void opcionTouch(int x, int y)
                     estado.setCorteTemperatura = false;
                 else
                     estado.setCorteTemperatura = true;
-                TFT_Temp();
+                TFT_CutOffTemp();
                 seleccionCorte = 1;
                 strcpy(estado.pantalla, "setCorte_Temperatura");
                 timeoutMenu = TIMEOUT_MENU * 1000;

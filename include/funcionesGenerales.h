@@ -9,6 +9,7 @@ void initStatus(void)
   status.temp = 0;
   status.tempDUT = 0;
   status.time = 0;
+  status.pantalla = 0;
 }
 
 void initSet(void)

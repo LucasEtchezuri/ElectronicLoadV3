@@ -1,3 +1,5 @@
+#define PANTALLA_PRINCIPAL 0
+
 void TFT_Pantalla_SplashScreen(void)
 {
   tft.fillScreen(TFT_BLACK); // a background colour defined
@@ -20,7 +22,7 @@ void TFT_Estado(void)
   tft.setTextSize(1);
   tft.setTextFont(4);
   tft.setTextDatum(TR_DATUM);
-  if (estado.estado == 0)
+  if (!status.run)
   {
     tft.fillRect(197, 0, 320, 30, TFT_RED);
     tft.setTextColor(TFT_WHITE, TFT_RED);
@@ -43,12 +45,12 @@ void TFT_Modo(void)
   //tft.fillRect(155, 80, 53, 40, TFT_WHITE);
   tft.setCursor(tft_pos_modo_x, tft_pos_modo_y); // Set "cursor" at top left corner of display (0,0) and select font
   tft.setTextDatum(BL_DATUM);
-  if (estado.modo == 1)
+  if (set.mode == 1)
   { // 1=I
     tft.print("I");
     tft.drawString("A", tft_pos_set_x + 175, tft_pos_set_y + 55);
   }
-  else if (estado.modo == 2)
+  else if (set.mode == 2)
   { // 2=V
     tft.print("V");
     tft.drawString("V", tft_pos_set_x + 175, tft_pos_set_y + 55);
@@ -151,6 +153,20 @@ void TFT_SetSeleccion(int unidad)
   }
 }
 
+void TFT_DatosEnPantalla(void)
+{
+  if (status.pantalla == PANTALLA_PRINCIPAL)
+  {
+    tft.setTextDatum(BL_DATUM);
+    tft.setTextSize(1);
+    tft.setTextFont(7);
+    tft.setTextColor(TFT_BLACK, TFT_WHITE); // Font blanco.. Sin color de fondo
+    tft.setCursor(tft_pos_set_x, tft_pos_set_y);
+    tft.drawFloat(set.setCurrent / 1000.00, 3, tft_pos_set_x, tft_pos_set_y + 50);
+    Serial.println("imprimo numero");
+  }
+}
+
 void TFT_Set(void)
 {
   if (strcmp(estado.pantalla, "principal") == 0)
@@ -176,7 +192,8 @@ void TFT_Set(void)
     tft.setTextFont(7);
     tft.setTextColor(TFT_BLACK, TFT_WHITE); // Font blanco.. Sin color de fondo
     tft.setCursor(tft_pos_set_x, tft_pos_set_y);
-    tft.drawFloat(estado.set / 10000.00, 3, tft_pos_set_x, tft_pos_set_y + 50);
+    tft.drawFloat(set.setCurrent / 1000.00, 3, tft_pos_set_x, tft_pos_set_y + 50);
+    Serial.println("imprimo numero");
   }
 }
 
@@ -255,11 +272,11 @@ void TFT_Set_Corte_Temperatura(void)
   }
 }
 
-void TFT_VIN(void)
+void TFT_CutOffVoltage(void)
 {
   tft.setTextSize(1); // set text size multiplier to 1
 
-  if (estado.setCorteVoltajeMinimo)
+  if (set.vCutOff > 0)
     tft.fillRect(5, 145, 65, 50, TFT_WHITE);
   else
     tft.fillRect(5, 145, 65, 50, TFT_GREY);
@@ -274,13 +291,13 @@ void TFT_VIN(void)
   tft.setTextColor(TFT_BLACK);
   tft.setTextFont(2);
   tft.setCursor(23, 168); // Set "cursor" at top left corner of display (0,0) and select font
-  tft.println(estado.corteVoltajeMinimo / 100.00);
+  tft.println(set.vCutOff / 1000.00);
 }
-void TFT_Tiempo(void)
+void TFT_CutOffTime(void)
 {
   tft.setTextDatum(TL_DATUM);
   tft.setTextSize(1); // set text size multiplier to 1
-  if (estado.setCorteTiempo)
+  if (set.tCutOff > 0) 
     tft.fillRect(75, 145, 65, 50, TFT_WHITE);
   else
     tft.fillRect(75, 145, 65, 50, TFT_GREY);
@@ -294,14 +311,14 @@ void TFT_Tiempo(void)
   tft.setTextFont(2);
   //tft.setCursor(92, 168); // Set "cursor" at top left corner of display (0,0) and select font
   //tft.println(estado.corteTiempo);
-  tft.drawNumber(estado.corteTiempo / 60, 90, 170);
+  tft.drawNumber(set.tCutOff / 60, 90, 170);
   tft.drawString(":", 110, 170);
-  tft.drawNumber(estado.corteTiempo - (int)((estado.corteTiempo / 60) * 60), 120, 170);
+  tft.drawNumber(set.tCutOff - (int)((set.tCutOff / 60) * 60), 120, 170);
 }
-void TFT_Temp(void)
+void TFT_CutOffTemp(void)
 {
   tft.setTextSize(1); // set text size multiplier to 1
-  if (estado.setCorteTemperatura)
+  if (set.tempCutOff > 0)
     tft.fillRect(145, 145, 65, 50, TFT_WHITE);
   else
     tft.fillRect(145, 145, 65, 50, TFT_GREY);
@@ -315,10 +332,10 @@ void TFT_Temp(void)
   tft.setTextColor(TFT_BLACK);
   tft.setTextFont(2);
   tft.setCursor(169, 168); // Set "cursor" at top left corner of display (0,0) and select font
-  tft.println(estado.corteTemperatura);
+  tft.println(set.tempCutOff);
 }
 
-void TFT_Pantalla_Inicial(void)
+void TFT_Pantalla_Completa(void)
 {
   tft.fillScreen(TFT_BLUE);
   tft.fillRect(0, 0, 320, 30, TFT_WHITE);
@@ -333,11 +350,11 @@ void TFT_Pantalla_Inicial(void)
   tft.fillRoundRect(5, 40, 205, 100, 10, TFT_WHITE);
   tft.drawRoundRect(5, 40, 205, 100, 10, TFT_BLACK);
 
-  // Cortes
+  // Recuadros de CutOffs
 
-  TFT_VIN();
-  TFT_Tiempo();
-  TFT_Temp();
+  TFT_CutOffVoltage();
+  TFT_CutOffTime();
+  TFT_CutOffTemp();
 
   // Recuadro Footer
   tft.fillRect(0, 200, 320, 40, TFT_WHITE);
@@ -434,7 +451,7 @@ void TFT_DibujaPantallaPrincipal(void)
 {
   if ((strcmp(estado.pantalla, "prohibido") == 0) and ((millis() - timeoutMenuAnt) > timeoutMenu))
   {
-    TFT_Pantalla_Inicial();
+    TFT_Pantalla_Completa();
     strcpy(estado.pantalla, "principal");
   }
 }

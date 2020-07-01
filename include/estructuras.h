@@ -23,6 +23,7 @@ struct st_status
   float tempDUT;
   int FanRpm;
   unsigned long time; // time in seconds running
+  byte pantalla;
 };
 
 struct st_estado

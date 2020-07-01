@@ -1,5 +1,5 @@
 #include <Arduino.h>
-#include <user_setup_tft.h>
+#include <User_Setup.h>
 #include <TFT_Touch.h>
 #include <TFT_eSPI.h> // Graphics and font library for ILI9341 driver chip
 #include <SPI.h>
@@ -91,8 +91,13 @@ void setup(void)
   //dac.setReference(DAC_REFERENCE);
   //dac.writeDAC(0);
 
-  //SPI.begin(14, 12, 13);                // cambiar nueva lib
-  //adc.begin(ADC_CS_PIN, ADC_READY_PIN); // cambiar nueva lib
+  SPI.begin(14, 12, 13);                // cambiar nueva lib
+  adc.begin(ADC_CS_PIN, ADC_READY_PIN); // cambiar nueva lib
+  adc.setConversionMode(1);             //modo continuo
+  adc.setOpMode(0x02);                  //Turbo Mode
+  adc.setDataRate(0x06);                // 2000SPS
+  adc.setMultiplexer(0x08);             // AIN0
+  
 
   ledcSetup(0, 15000, 8); // Set PWM FAN
   ledcAttachPin(FAN, 0);  // Set PWM FAN
@@ -120,9 +125,8 @@ void setup(void)
 
   TFT_Creacion_Sprites();      // Creacion de los sprites
   TFT_Pantalla_SplashScreen(); // Dibujo de la pantall de bienvenida
-  TFT_Pantalla_Inicial();      // Dibujo de la pantalla principal y los elementos fijos
-  TFT_Set();                   // Dibujo el numero seteado
-  Serial.println("Termino Setup");
+  TFT_Pantalla_Completa();      // Dibujo de la pantalla principal y todos los valores
+  TFT_DatosEnPantalla();
   delay(500);
 }
 
