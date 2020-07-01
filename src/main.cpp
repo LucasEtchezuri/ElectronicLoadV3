@@ -1,5 +1,5 @@
 #include <Arduino.h>
-#include <User_Setup.h>
+#include <user_setup_tft.h>
 #include <TFT_Touch.h>
 #include <TFT_eSPI.h> // Graphics and font library for ILI9341 driver chip
 #include <SPI.h>
@@ -88,11 +88,11 @@ void setup(void)
 
   digitalWrite(REGULATOR_ENABLE, LOW); // disable regulator
 
-  dac.setReference(DAC_REFERENCE);
-  dac.writeDAC(0);
+  //dac.setReference(DAC_REFERENCE);
+  //dac.writeDAC(0);
 
-  SPI.begin(14, 12, 13);                // cambiar nueva lib
-  adc.begin(ADC_CS_PIN, ADC_READY_PIN); // cambiar nueva lib
+  //SPI.begin(14, 12, 13);                // cambiar nueva lib
+  //adc.begin(ADC_CS_PIN, ADC_READY_PIN); // cambiar nueva lib
 
   ledcSetup(0, 15000, 8); // Set PWM FAN
   ledcAttachPin(FAN, 0);  // Set PWM FAN
