@@ -1,4 +1,4 @@
-struct currents
+struct st_currents
 {
   unsigned long currentA;
   unsigned long currentB;

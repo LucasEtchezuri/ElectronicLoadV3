@@ -42,16 +42,16 @@ void setearVolt(uint mv, uint vMax)
 
 void ISRencoder()
 {
-  detachInterrupt(encoderA);
+  detachInterrupt(ENCODER_A);
   int veces = 0;
   for (int x = 0; x < 4000; x++)
   {
-    if (digitalRead(encoderA) == LOW)
+    if (digitalRead(ENCODER_A) == LOW)
       veces++;
   }
   if (veces > 2500)
   {
-    if (digitalRead(encoderB) == HIGH) // si B es HIGH, sentido horario
+    if (digitalRead(ENCODER_B) == HIGH) // si B es HIGH, sentido horario
     {
       if (strcmp(estado.pantalla, "setCorte_V") == 0)
       {
@@ -110,7 +110,7 @@ void ISRencoder()
 }
 void ISRtouch()
 {
-  detachInterrupt(touchIRQ);
+  detachInterrupt(TOUCH_IRQ);
   X_Raw = touch.ReadRawY();
   Y_Raw = touch.ReadRawX();
   //Serial.print("X = ");
@@ -227,13 +227,13 @@ void actualizarEstado(void)
 
 void activacionInterrupcionTouch(void)
 {
-  if (digitalRead(touchIRQ) == 0)
+  if (digitalRead(TOUCH_IRQ) == 0)
     touchAnt = millis();
   else if ((touchAnt != 0) and ((millis() - touchAnt) > touchDebounce))
   {
     X_Raw = 0;
     Y_Raw = 0;
-    attachInterrupt(digitalPinToInterrupt(touchIRQ), ISRtouch, FALLING); // interrupcion del touch 1=normal   0=Presionado
+    attachInterrupt(digitalPinToInterrupt(TOUCH_IRQ), ISRtouch, FALLING); // interrupcion del touch 1=normal   0=Presionado
     touchAnt = 0;
   }
 }
@@ -242,7 +242,7 @@ void activacionInterrupcionEncoder(void)
 {
   if (((millis() - encoderAnt) > encoderDebounce))
   {
-    attachInterrupt(digitalPinToInterrupt(encoderA), ISRencoder, FALLING); // interrupcion del touch 1=normal   0=Presionado
+    attachInterrupt(digitalPinToInterrupt(ENCODER_A), ISRencoder, FALLING); // interrupcion del touch 1=normal   0=Presionado
     encoderAnt = 0;
   }
 }

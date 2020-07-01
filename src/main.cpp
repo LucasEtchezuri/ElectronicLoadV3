@@ -3,17 +3,20 @@
 #include <TFT_Touch.h>
 #include <TFT_eSPI.h> // Graphics and font library for ILI9341 driver chip
 #include <SPI.h>
-#include "ADS1120.h"
+#include <ADS1120.h>
+#include <DAC8830.h>
+
 #include "estructuras.h"
 #include "configHard.h"
 
 TFT_Touch touch = TFT_Touch(DCS, DCLK, DIN, DOUT); /* Create an instance of TOUCH */
 TFT_eSPI tft = TFT_eSPI();                         /* Create an instance of TFT screen */
-TFT_eSprite spriteCooler = TFT_eSprite(&tft); // Sprite
+TFT_eSprite spriteCooler = TFT_eSprite(&tft);      // Sprite
 TFT_eSprite spriteProhibidoCambioModo = TFT_eSprite(&tft);
 TFT_eSprite spriteSetCorte = TFT_eSprite(&tft);
 
 ADS1120 adc;
+DAC8830 dac;
 
 // Variables Globales  ----------------
 volatile unsigned int X_Raw;
@@ -67,31 +70,33 @@ float CORRECCION_CORRIENTE = 0.0;
 void setup(void)
 {
   Serial.begin(115200);
-  
+
   pinMode(ENCODER_A, INPUT);      // ENCODER entrada A
   pinMode(ENCODER_B, INPUT);      // ENCODER entrada B
   pinMode(ENCODER_BUTTON, INPUT); // ENCODER button
   pinMode(TOUCH_IRQ, INPUT);      // TOUCH IRQ
-  pinMode(CS_DAC_A, OUTPUT);     // CS DAC
-  pinMode(CS_DAC_B, OUTPUT);     // CS DAC
-  pinMode(ADC_READY_PIN, INPUT); // ADC ready conversion
-  pinMode(FAN, OUTPUT); // Fan Externo PWM
-  pinMode(BUZZER, OUTPUT);       // Buzzer
+  pinMode(CS_DAC_A, OUTPUT);      // CS DAC
+  pinMode(CS_DAC_B, OUTPUT);      // CS DAC
+  pinMode(ADC_READY_PIN, INPUT);  // ADC ready conversion
+  pinMode(FAN, OUTPUT);           // Fan Externo PWM
+  pinMode(BUZZER, OUTPUT);        // Buzzer
   pinMode(V_SELECT, OUTPUT);      // Sensor Voltaje
   //pinMode(REGULATOR_ENABLE, OUTPUT);      // Sensor Voltaje
 
-  digitalWrite(REGULATOR_ENABLE, LOW);
+  digitalWrite(REGULATOR_ENABLE, LOW); // disable regulator
   
 
-  //setearVolt(3000, 4100); // Lo primeor que hago por seguridad seteo 0 a la salida del DAC
+  adc.setVoltageRef(ADC_REFERENCE);
+  SPI.begin(14, 12, 13);                // cambiar nueva lib
+  adc.begin(ADC_CS_PIN, ADC_READY_PIN); // cambiar nueva lib
+
+  setearVolt(3000, 4100); // Lo primeor que hago por seguridad seteo 0 a la salida del DAC
   ledcSetup(0, 15000, 8);
-  ledcAttachPin(fanDisipador, 0);
-delay(500);
-  SPI.begin(14, 12, 13);
-  adc.begin(ADC_CS_PIN, ADC_READY_PIN);
+  ledcAttachPin(FAN, 0);
+  delay(500);
 
   digitalWrite(CS_DAC_A, HIGH); // SS is pin 10
- // tft.init();
+                                // tft.init();
   tft.setRotation(TFT_ORIENTACION);
 
   touch.setCal(HMIN, HMAX, VMIN, VMAX, HRES, VRES, XYSWAP); // Raw xmin, xmax, ymin, ymax, width, height
@@ -100,8 +105,8 @@ delay(500);
   cargarCoordenadas(); // setea los valores de coordenadas de TFT de las opciones
   inicializarEstado(); // inicializa las variables de la estructura estado.
 
-  attachInterrupt(digitalPinToInterrupt(encoderA), ISRencoder, FALLING); // interrupcion sobre pin A del encoder
-  attachInterrupt(digitalPinToInterrupt(touchIRQ), ISRtouch, FALLING);   // interrupcion del touch 1=normal   0=Presionado
+  attachInterrupt(digitalPinToInterrupt(ENCODER_A), ISRencoder, FALLING); // interrupcion sobre pin A del encoder
+  attachInterrupt(digitalPinToInterrupt(TOUCH_IRQ), ISRtouch, FALLING);   // interrupcion del touch 1=normal   0=Presionado
   //attachInterrupt(digitalPinToInterrupt(conversionReady), ISR_ADC, FALLING); // interrupcion del touch 1=normal   0=Presionado
 
   //#define RISING    0x01
