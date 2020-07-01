@@ -22,6 +22,10 @@ DAC8830 dac;
 volatile unsigned int X_Raw;
 volatile unsigned int Y_Raw;
 st_estado estado;
+st_status status;
+st_set set;
+st_currents currents;
+
 unsigned int touchDebounce = 30;
 volatile unsigned int touchAnt = 0;
 unsigned int encoderDebounce = 50;
@@ -87,24 +91,23 @@ void setup(void)
 
   dac.setReference(DAC_REFERENCE);
   dac.writeDAC(0);
-  
+
   SPI.begin(14, 12, 13);                // cambiar nueva lib
   adc.begin(ADC_CS_PIN, ADC_READY_PIN); // cambiar nueva lib
 
-  setearVolt(3000, 4100); // Lo primeor que hago por seguridad seteo 0 a la salida del DAC
-  ledcSetup(0, 15000, 8);
-  ledcAttachPin(FAN, 0);
-  delay(500);
+  ledcSetup(0, 15000, 8);               // Set PWM FAN
+  ledcAttachPin(FAN, 0);                // Set PWM FAN
+  
 
-  digitalWrite(CS_DAC_A, HIGH); // SS is pin 10
-                                // tft.init();
+  tft.init();
   tft.setRotation(TFT_ORIENTACION);
-
   touch.setCal(HMIN, HMAX, VMIN, VMAX, HRES, VRES, XYSWAP); // Raw xmin, xmax, ymin, ymax, width, height
   touch.setRotation(2);
 
   cargarCoordenadas(); // setea los valores de coordenadas de TFT de las opciones
-  inicializarEstado(); // inicializa las variables de la estructura estado.
+  //inicializarEstado(); // inicializa las variables de la estructura estado.
+  initStatus(); // init status structure
+  initSet(); // init set structure
 
   attachInterrupt(digitalPinToInterrupt(ENCODER_A), ISRencoder, FALLING); // interrupcion sobre pin A del encoder
   attachInterrupt(digitalPinToInterrupt(TOUCH_IRQ), ISRtouch, FALLING);   // interrupcion del touch 1=normal   0=Presionado
@@ -123,6 +126,7 @@ void setup(void)
   TFT_Pantalla_Inicial();      // Dibujo de la pantalla principal y los elementos fijos
   TFT_Set();                   // Dibujo el numero seteado
   Serial.println("Termino Setup");
+  delay(500);
 }
 
 void loop()

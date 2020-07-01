@@ -1,28 +1,21 @@
-void inicializarEstado(void)
+void initStatus(void)
 {
-  estado.estado = 0;
-  estado.modo = 1;
-  estado.set = 0;
-  estado.v = 0;
-  estado.i = 0;
-  estado.i0 = 0;
-  estado.i1 = 0;
-  estado.i2 = 0;
-  estado.i3 = 0;
-  estado.w = 0;
-  estado.ah = 0;
-  estado.segundos = 0;
-  estado.tiempoInicio = 0;
-  estado.coolerDisipadorPotencia = 0;
-  estado.temperaturaDisipador = 0;
-  strcpy(estado.pantalla, "principal");
-  estado.setSeleccion = 10;
-  estado.corteVoltajeMinimo = 0;
-  estado.setCorteVoltajeMinimo = false;
-  estado.corteTiempo = 3600;
-  estado.setCorteTiempo = false;
-  estado.corteTemperatura = 70;
-  estado.setCorteTemperatura = false;
+  status.currents = currents;
+  status.FanRpm = 0;
+  status.run = false;
+  status.temp = 0;
+  status.tempDUT = 0;
+  status.time = 0;
+}
+
+void initSet(void)
+{
+  status.currents = 0;
+  status.FanRpm = 0;
+  status.run = false;
+  status.temp = 0;
+  status.tempDUT = 0;
+  status.time = 0;
 }
 
 void setearVolt(uint mv, uint vMax)
