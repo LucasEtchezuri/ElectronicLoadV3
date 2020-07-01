@@ -9,10 +9,11 @@
 
 TFT_Touch touch = TFT_Touch(DCS, DCLK, DIN, DOUT); /* Create an instance of TOUCH */
 TFT_eSPI tft = TFT_eSPI();                         /* Create an instance of TFT screen */
-ADS1120 adc;
 TFT_eSprite spriteCooler = TFT_eSprite(&tft); // Sprite
 TFT_eSprite spriteProhibidoCambioModo = TFT_eSprite(&tft);
 TFT_eSprite spriteSetCorte = TFT_eSprite(&tft);
+
+ADS1120 adc;
 
 // Variables Globales  ----------------
 volatile unsigned int X_Raw;
@@ -66,25 +67,26 @@ float CORRECCION_CORRIENTE = 0.0;
 void setup(void)
 {
   Serial.begin(115200);
-  delay(500);
-  pinMode(encoderA, INPUT);      // ENCODER entrada A
-  pinMode(encoderB, INPUT);      // ENCODER entrada B
-  pinMode(encoderButton, INPUT); // ENCODER button
-  pinMode(touchIRQ, INPUT);      // TOUCH IRQ
+  
+  pinMode(ENCODER_A, INPUT);      // ENCODER entrada A
+  pinMode(ENCODER_B, INPUT);      // ENCODER entrada B
+  pinMode(ENCODER_BUTTON, INPUT); // ENCODER button
+  pinMode(TOUCH_IRQ, INPUT);      // TOUCH IRQ
   pinMode(CS_DAC_A, OUTPUT);     // CS DAC
+  pinMode(CS_DAC_B, OUTPUT);     // CS DAC
   pinMode(ADC_READY_PIN, INPUT); // ADC ready conversion
-  //pinMode(tempInterna, INPUT);     // Temp Interna
-  pinMode(tempDisipador, INPUT); // Temp Disipador
-  pinMode(tempDUT, INPUT);       // Temp DUT
-  pinMode(fanDisipador, OUTPUT); // Fan Externo PWM
-  pinMode(buzzer, OUTPUT);       // Buzzer
-  pinMode(vSelect, OUTPUT);      // Sensor Voltaje
-  //pinMode(regulacionEnable, OUTPUT);      // Sensor Voltaje
+  pinMode(FAN, OUTPUT); // Fan Externo PWM
+  pinMode(BUZZER, OUTPUT);       // Buzzer
+  pinMode(V_SELECT, OUTPUT);      // Sensor Voltaje
+  //pinMode(REGULATOR_ENABLE, OUTPUT);      // Sensor Voltaje
+
+  digitalWrite(REGULATOR_ENABLE, LOW);
+  
 
   //setearVolt(3000, 4100); // Lo primeor que hago por seguridad seteo 0 a la salida del DAC
   ledcSetup(0, 15000, 8);
   ledcAttachPin(fanDisipador, 0);
-
+delay(500);
   SPI.begin(14, 12, 13);
   adc.begin(ADC_CS_PIN, ADC_READY_PIN);
 

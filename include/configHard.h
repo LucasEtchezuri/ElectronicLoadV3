@@ -3,14 +3,14 @@
 #define DIN  15     // Data in pin (T_DIN) of touch screen
 #define DCS  0      // Chip select pin (T_CS) of touch screen
 #define DCLK 27     // Clock pin (T_CLK) of touch screen
-#define touchIRQ 33 // IRQ del touch
+#define TOUCH_IRQ 33 // IRQ del touch
 
 // ---------------------------------------------------------------------
 
 // ENCODER
-#define encoderA 5
-#define encoderB 23
-#define encoderButton 32
+#define ENCODER_A 5
+#define ENCODER_B 23
+#define ENCODER_BUTTON 32
 
 // ---------------------------------------------------------------------
 
@@ -26,24 +26,20 @@
 
 // ---------------------------------------------------------------------
 
-// Temperaturas
-#define tempDisipador 35
-#define tempDUT 39
-// ---------------------------------------------------------------------
 
 // Fans
-#define fanDisipador 26
+#define FAN 26
 // ---------------------------------------------------------------------
 
 // Buzzer
-#define buzzer 19
+#define BUZZER 19
 // ---------------------------------------------------------------------
 
 // V Input Select
-#define vSelect 36
+#define V_SELECT 36
 // ---------------------------------------------------------------------
 
-#define regulacionEnable 34
+#define REGULATOR_ENABLE 34
 
 
 
