@@ -29,37 +29,17 @@ st_currents currents;
 unsigned int touchDebounce = 30;
 volatile unsigned int touchAnt = 0;
 unsigned int encoderDebounce = 50;
-unsigned int encoderAnt = 0;
-unsigned int dibujarCoolerAnt = 0;
-unsigned int velocidadCooler = 2; // 1= min   30=max
-unsigned int timeoutMenu = 0;     // Segundos
-unsigned int timeoutMenuAnt = 0;
+volatile unsigned int encoderAnt = 0;
+unsigned long timeDisplayMenu = 0;
+unsigned long timeSelectionDigit = 0;
 unsigned int timeoutSetSeleccion = 0; // Segundos
 unsigned int timeoutSetSeleccionAnt = 0;
 unsigned vMinCant = 0;
-int32_t segundosAnt = 0;
+//int32_t segundosAnt = 0;
 int dobleClick = 300;
 int dobleClickAnt = 0;
 int seleccionCorte = 1;
-int posMedia = 0;
 
-volatile unsigned int actualizarDisplayAnt = 0;
-volatile unsigned int actualizarEstadoAnt = 0;
-unsigned int obtenerCorrienteAnt = 0;
-unsigned int FPS_Display = 10;         // Veces por segundo que se actualizan los datos en el display
-unsigned int actualizarEstadoFPS = 30; // veces por segundo que se calculan los datos del estado y se actualiza el seteo de corriente
-
-bool conversionActiva = false;
-int rotacionCooler = 0;
-
-int ant = 7687;
-int valor = 0;
-
-int ANTERIOR = 0; // almacena valor anterior de la variable POSICION
-
-volatile int POSICION = 0; // variable POSICION con valor inicial de 50 y definida
-
-float CORRECCION_CORRIENTE = 0.0;
 
 // ------------------------------------
 
@@ -91,20 +71,22 @@ void setup(void)
   //dac.setReference(DAC_REFERENCE);
   //dac.writeDAC(0);
 
-  //SPI.begin(14, 12, 13);                // cambiar nueva lib
+  tft.init();
+
   adc.begin(14, 32, 13, ADC_CS_PIN, ADC_READY_PIN); // cambiar nueva lib
   adc.setGain(1);
-  adc.setConversionMode(0x01);             //modo continuo
-  adc.setOpMode(0x02);                  //Turbo Mode
-  adc.setDataRate(0x06);                // 2000SPS
-  adc.setMultiplexer(0x08);             // AIN0
-  
+  adc.setConversionMode(0x01); //modo continuo
+  adc.setOpMode(0x02);         //Turbo Mode
+  adc.setDataRate(0x06);       // 2000SPS
+  adc.setMultiplexer(0x08);    // AIN0
+
   ledcSetup(0, 15000, 8); // Set PWM FAN
   ledcAttachPin(FAN, 0);  // Set PWM FAN
 
   cargarCoordenadas(); // setea los valores de coordenadas de TFT de las opciones
   initStatus();        // init status structure
   initSet();           // init set structure
+  setCurrent(set.selCurrent);
 
   attachInterrupt(digitalPinToInterrupt(ENCODER_A), ISRencoder, FALLING); // interrupcion sobre pin A del encoder
   attachInterrupt(digitalPinToInterrupt(TOUCH_IRQ), ISRtouch, FALLING);   // interrupcion del touch 1=normal   0=Presionado
@@ -118,84 +100,62 @@ void setup(void)
   //#define ONLOW_WE  0x0C
   //#define ONHIGH_WE 0x0D
 
-  tft.init();
   tft.setRotation(TFT_ORIENTACION);
   touch.setCal(HMIN, HMAX, VMIN, VMAX, HRES, VRES, XYSWAP); // Raw xmin, xmax, ymin, ymax, width, height
   touch.setRotation(2);
 
   TFT_Creacion_Sprites();      // Creacion de los sprites
   TFT_Pantalla_SplashScreen(); // Dibujo de la pantall de bienvenida
-  TFT_Pantalla_Completa();      // Dibujo de la pantalla principal y todos los valores
+  TFT_Pantalla_Completa();     // Dibujo de la pantalla principal y todos los valores
   TFT_DatosEnPantalla();
   delay(500);
 }
 
 void loop()
 {
+  static unsigned long refreshDisplayAnt = 0;
+  static unsigned long readTempsAnt = 0;
 
   activacionInterrupcionTouch();   // debounce y activacion de la interrupcion del touch. ya que dentro de ISRtouch, la interrupcion de desactiva para no llamarla mas de una vez.
   activacionInterrupcionEncoder(); // debounce y activacion de la interrupcion del ENCODER
   resetDobliClick();
 
-  readCurrents(); // mide la corriente (cada vez que ejecuta mide en una entrada diferente).  Promedia 10 lecturas.
-  //obtenerCorriente(); // mide la corriente (cada vez que ejecuta mide en un modulo)
+  readCurrentsVoltage(); // mide la corriente (cada vez que ejecuta mide en una entrada diferente).  Promedia 10 lecturas.
+  TFT_SpriteCooler();    // Dibuja el sprite del cooler
 
-  //TFT_SpriteCooler(); // Dibuja el sprite del cooler
-
-  //TFT_DibujaPantallaPrincipal(); // Dibuja la pntalla principal solo si paso el timeout (timeoutMenu)
-  //TFT_DibujaSetSeleccion();      // Dibuja la pntalla principal solo si paso el timeout (timeoutSetSeleccion)
-
-/*
-  if ((actualizarEstadoAnt) == 0 or ((actualizarEstadoAnt + (1000 / actualizarEstadoFPS)) < millis()))
+  if (status.run)
   {
+    checkCutOffV();
+    //checkCorteTemp();
+    //checkCorteTime();
 
-    if (estado.estado)
-    {
-      if (estado.i != 0)
-      {
-
-        int dif = estado.set - estado.i;
-        CORRECCION_CORRIENTE = CORRECCION_CORRIENTE + ((float)dif / 10);
-        if (estado.set + CORRECCION_CORRIENTE < 0)
-        {
-          CORRECCION_CORRIENTE = 0.0;
-        }
-        else if (estado.set + CORRECCION_CORRIENTE > 40960)
-        {
-          CORRECCION_CORRIENTE = 0.0;
-        }
-        //Serial.println(estado.set);
-        //Serial.println(estado.i);
-
-        //Serial.println(CORRECCION_CORRIENTE);
-      }
-    }
-    uint voltSet = (uint)(estado.set * CORRECCION_SET_CORRIENTE);
-
-    voltSet = (uint)(estado.estado * (voltSet + CORRECCION_CORRIENTE));
-
-    setearVolt(voltSet, 4096);
-    actualizarEstado(); //Actualiza la estructura estado con todos los valores menos la corriente. La corriente la actualiza "obtenerCorriente()"
-
-    checkCorteV();
-    actualizarEstadoAnt = millis();
+    // Frecuencia de actualizar Corriente
+    adjustCurrent();
+  }
+  else
+  {
   }
 
-
-  if ((actualizarDisplayAnt == 0) or ((actualizarDisplayAnt + (1000 / FPS_Display)) < millis()))
+  if ((refreshDisplayAnt == 0) or ((refreshDisplayAnt + (1000 / FPS_DISPLAY)) < millis())) // FRECUENCIA DE ACTUALIZACION TFT
   {
     TFT_Info();        //Grafica el recuadro de Info con los valores
     TFT_Set();         //Grafica el valor de SET
     TFT_Set_Corte_V(); //Grafica el valor de SET de Corte
     TFT_Set_Corte_Tiempo();
     TFT_Set_Corte_Temperatura();
-
-    actualizarDisplayAnt = millis();
+    refreshDisplayAnt = millis();
   }
+
+  if ((readTempsAnt == 0) or ((readTempsAnt + (TIME_READ_TEMPS * 1000)) < millis())) // LECTURA TEMP Y SET COOLER
+  {
+    readTemps();
+    powerCooler();
+  }
+  //TFT_DibujaPantallaPrincipal(); // Dibuja la pntalla principal solo si paso el timeout (timeoutMenu)
+  //TFT_DibujaSetSeleccion();      // Dibuja la pntalla principal solo si paso el timeout (timeoutSetSeleccion)
 
   if (X_Raw != 0 or Y_Raw != 0)
   {
     opcionTouch(X_Raw, Y_Raw);
   }
-*/
 }

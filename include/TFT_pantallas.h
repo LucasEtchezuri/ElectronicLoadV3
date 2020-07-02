@@ -1,4 +1,9 @@
 #define PANTALLA_PRINCIPAL 0
+#define PANTALLA_PROHIBIDO 1
+#define PANTALLA_SET_CORTE_V 2
+#define PANTALLA_SET_CORTE_TIME 3
+#define PANTALLA_SET_CORTE_TEMP 4
+
 
 void TFT_Pantalla_SplashScreen(void)
 {
@@ -64,7 +69,7 @@ void TFT_Modo(void)
 
 void TFT_Info(void)
 {
-  if (strcmp(estado.pantalla, "principal") == 0)
+  if (status.pantalla == PANTALLA_PRINCIPAL)
   {
     // Recuadro de Info
     tft.fillRoundRect(220, 40, 90, 130, 5, TFT_WHITE);
@@ -102,15 +107,15 @@ void TFT_Info(void)
     tft.setTextDatum(TL_DATUM);
 
     tft.setCursor(260, 55);
-    tft.print((float)estado.v / 1000);
+    tft.print((float)status.voltage / 1000.00);
     tft.setCursor(260, 70);
-    tft.print(estado.i / 10000.000);
+    tft.print(status.currents.currentTotal / 10000.000);
     tft.setCursor(260, 85);
-    tft.print(estado.w / 10.00);
+    tft.print(status.power / 100.00);
     tft.setCursor(260, 100);
-    tft.print(estado.segundos);
+    tft.print(millis() - status.initTime);
     tft.setCursor(260, 115);
-    tft.print(estado.ah);
+    tft.print("watt");
 
     tft.setTextColor(TFT_BLACK, TFT_WHITE); // Font blanco.. Sin color de fondo
     tft.setTextSize(1);                     // set text size multiplier to 1
@@ -120,11 +125,11 @@ void TFT_Info(void)
     tft.setCursor(92, 204);
     tft.print("             ");
     tft.setCursor(92, 204);
-    tft.print(estado.temperaturaDisipador);
+    tft.print(status.temp);
     tft.setCursor(92, 220);
     tft.print("             ");
     tft.setCursor(92, 220);
-    tft.print(estado.coolerDisipadorPotencia);
+    tft.print(status.FanPower);
     tft.print(" %");
   }
 }
@@ -153,18 +158,6 @@ void TFT_SetSeleccion(int unidad)
   }
 }
 
-void TFT_DatosEnPantalla(void)
-{
-  if (status.pantalla == PANTALLA_PRINCIPAL)
-  {
-    tft.setTextDatum(BL_DATUM);
-    tft.setTextSize(1);
-    tft.setTextFont(7);
-    tft.setTextColor(TFT_BLACK, TFT_WHITE); // Font blanco.. Sin color de fondo
-    tft.setCursor(tft_pos_set_x, tft_pos_set_y);
-    tft.drawFloat(set.setCurrent / 1000.00, 3, tft_pos_set_x, tft_pos_set_y + 50);
-  }
-}
 
 void TFT_Set(void)
 {
@@ -191,8 +184,7 @@ void TFT_Set(void)
     tft.setTextFont(7);
     tft.setTextColor(TFT_BLACK, TFT_WHITE); // Font blanco.. Sin color de fondo
     tft.setCursor(tft_pos_set_x, tft_pos_set_y);
-    tft.drawFloat(set.setCurrent / 1000.00, 3, tft_pos_set_x, tft_pos_set_y + 50);
-    Serial.println("imprimo numero");
+    tft.drawFloat(set.selCurrent / 1000.00, 3, tft_pos_set_x, tft_pos_set_y + 50);
   }
 }
 
@@ -296,7 +288,7 @@ void TFT_CutOffTime(void)
 {
   tft.setTextDatum(TL_DATUM);
   tft.setTextSize(1); // set text size multiplier to 1
-  if (set.tCutOff > 0) 
+  if (set.tCutOff > 0)
     tft.fillRect(75, 145, 65, 50, TFT_WHITE);
   else
     tft.fillRect(75, 145, 65, 50, TFT_GREY);
@@ -423,18 +415,19 @@ void TFT_Creacion_Sprites(void)
 
 void TFT_SpriteCooler(void)
 {
-  velocidadCooler = estado.coolerDisipadorPotencia;
+  int rotacionCooler = 0;
+  unsigned long dibujarCoolerAnt = 0;
 
-  if (strcmp(estado.pantalla, "principal") == 0)
+  if (status.pantalla == PANTALLA_PRINCIPAL)
   {
-    if (velocidadCooler == 0)
+    if (status.FanPower == 0)
     {
       dibujarCoolerAnt = millis();
       tft.setPivot(20, 220);
       rotacionCooler = 0;
       spriteCooler.pushRotated(rotacionCooler, TFT_TRANSPARENT);
     }
-    else if ((dibujarCoolerAnt + (600 / velocidadCooler)) < millis())
+    else if ((dibujarCoolerAnt + (600 / status.FanPower)) < millis())
     {
       dibujarCoolerAnt = millis();
       tft.setPivot(20, 220);
@@ -448,7 +441,7 @@ void TFT_SpriteCooler(void)
 
 void TFT_DibujaPantallaPrincipal(void)
 {
-  if ((strcmp(estado.pantalla, "prohibido") == 0) and ((millis() - timeoutMenuAnt) > timeoutMenu))
+  if ((strcmp(estado.pantalla, "prohibido") == 0) and ((millis() - timeDisplayMenu) > (TIMEOUT_MENU * 1000)))
   {
     TFT_Pantalla_Completa();
     strcpy(estado.pantalla, "principal");
@@ -457,8 +450,17 @@ void TFT_DibujaPantallaPrincipal(void)
 
 void TFT_DibujaSetSeleccion(void)
 {
-  if ((millis() - timeoutSetSeleccionAnt) > timeoutSetSeleccion)
+  if ((millis() - timeSelectionDigit) > (TIMEOUT_SET_SELECCION * 1000))
   {
     estado.setSeleccion = 10;
+  }
+}
+
+void TFT_DatosEnPantalla(void)
+{
+  TFT_Set();
+  if (status.pantalla == PANTALLA_PRINCIPAL)
+  {
+    
   }
 }

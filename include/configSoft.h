@@ -1,4 +1,7 @@
-#define MA_MAX  5000   //  Aca va el valor de MA que representa una salida de 2000mv del INA. (En mi caos use un INA de 400mv por Ampere.  por lo tanto si la salida es 2000mv serian 5000ma)
+#define MA_MAX  5000.00   //  Aca va el valor de MA que representa una salida de 2000mv del INA. (En mi caos use un INA de 400mv por Ampere.  por lo tanto si la salida es 2000mv serian 5000ma)
+#define MV_MAX  48000.00   //  Aca va el valor de MV que representa una salida de 2000mv en el divisor de voltage que entra al ADC
+#define VREF_DAC  4096.00
+
 // TOUCH
 // These are the default min and maximum values, set to 0 and 4095 to test the screen
 #define HMIN 0
@@ -19,7 +22,7 @@
 // ---------------------------------------------------------------------
 
 // COOLER
-#define COOLER_POTENCIA_MINIMA 60    // potencia minima a la que puede funcionar el cooler.
+#define COOLER_POTENCIA_MINIMA 60    // potencia minima a la que puede funcionar el cooler.  (de 0 a 255)
 #define COOLER_TEMP_MIN 35  // Temperatura a la que enciente el cooler a la potencia minima
 #define COOLER_TEMP_MAX 70  // Temperatura en la que el cooler lega el 100% de potencia
 
@@ -27,7 +30,6 @@
 #define TIMEOUT_MENU 3
 #define TIMEOUT_SET_SELECCION 5
 
-#define CORRECCION_SET_CORRIENTE 1   //Correccion de corriente para compensar errores en resistencias, etc
 #define CORRECCION_LECTURA_CORRIENTE 1.009   //Correccion de corriente para compensar errores en resistencias, etc - calibrado en 1 ampere
 #define DERIVA_X_AMPERE 10   //deriva de MV por AMPERE
 #define DERIVA_X_10VOLT 10   //deriva de MA por cada 10V de entrada
@@ -40,5 +42,9 @@
 #define AJUSTE_TEMP 1.2
 
 #define DAC_REFERENCE 4096          // millivotls
+
+#define FPS_DISPLAY 10
+
+#define TIME_READ_TEMPS 1           // seconds
 
 

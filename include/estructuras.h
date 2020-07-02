@@ -8,7 +8,7 @@ struct st_currents
 struct st_set
 {
   byte mode;              // Modo (0=I   1=V    2=P)
-  unsigned int setCurrent; //milliamp
+  unsigned int selCurrent; //milliamp - Select Current.  (different of SET current)
   unsigned int vCutOff;   //millivolts  (0 = disabled)
   int tempCutOff;         // (0 = disabled)
   int tempCutOffDUT;      // (0 = disabled)
@@ -19,11 +19,15 @@ struct st_status
 {
   bool run;             // true=RUNNING false=STOP
   st_currents currents; // (currentA, currentB, currentTotal)
+  long voltage;         // mv
+  long power;           // milliwatts
   float temp;
   float tempDUT;
-  int FanRpm;
-  unsigned long time; // time in seconds running
-  byte pantalla;
+  int FanPower;
+  unsigned long initTime; // time in seconds running
+  volatile byte pantalla;      // Pantalla en la que se encuentra el programa 
+  unsigned long setCurrent;
+  volatile long selUnidad;
 };
 
 struct st_estado

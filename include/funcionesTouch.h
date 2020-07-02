@@ -8,12 +8,12 @@ bool checkTouch(st_area area, int x, int y)
 
 void opcionTouch(int x, int y)
 {
-    if (strcmp(estado.pantalla, "prohibido") == 0)
+    if (status.pantalla == PANTALLA_PROHIBIDO)
     {
         TFT_Pantalla_Completa();
-        strcpy(estado.pantalla, "principal");
+        status.pantalla = PANTALLA_PRINCIPAL;
     }
-    else if (strcmp(estado.pantalla, "setCorte_V") == 0)
+    else if (status.pantalla == PANTALLA_SET_CORTE_V)
     {
         if (checkTouch(SET_CORTE_V_ENTERO, x, y))
         {
@@ -26,10 +26,10 @@ void opcionTouch(int x, int y)
         else
         {
             TFT_Pantalla_Completa();
-            strcpy(estado.pantalla, "principal");
+            status.pantalla = PANTALLA_PRINCIPAL;
         }
     }
-    else if (strcmp(estado.pantalla, "setCorte_Tiempo") == 0)
+    else if (status.pantalla == PANTALLA_SET_CORTE_TIME)
     {
         if (checkTouch(SET_CORTE_T_MIN, x, y))
         {
@@ -42,96 +42,85 @@ void opcionTouch(int x, int y)
         else
         {
             TFT_Pantalla_Completa();
-            strcpy(estado.pantalla, "principal");
+            status.pantalla = PANTALLA_PRINCIPAL;
         }
     }
-    else if (strcmp(estado.pantalla, "setCorte_Temperatura") == 0)
+    else if (status.pantalla == PANTALLA_SET_CORTE_TEMP)
     {
         TFT_Pantalla_Completa();
-        strcpy(estado.pantalla, "principal");
+        status.pantalla = PANTALLA_PRINCIPAL;
     }
-    else if (strcmp(estado.pantalla, "principal") == 0)
+    else if (status.pantalla == PANTALLA_PRINCIPAL)
     {
         if (checkTouch(ONOFF, x, y))
         {
-            if (estado.estado == 0)
+            if (!status.run)
             {
-                estado.estado = 1;
-                estado.tiempoInicio = millis();
-                segundosAnt = 0;
-                estado.ah=0;
+                status.run = true;
+                status.initTime = millis();
             }
             else
             {
-                estado.estado = 0;
-                estado.tiempoInicio = 0;
+                status.run = false;
+                status.initTime = 0;
             }
             TFT_Estado();
         }
         if (checkTouch(MODE, x, y))
         {
-            if (estado.estado == 0)
+            if (!status.run)
             {
-                if (estado.modo == 1)
-                    estado.modo = 2;
-                else if (estado.modo == 2)
-                    estado.modo = 3;
+                if (set.mode == 1)
+                    set.mode = 2;
+                else if (set.mode == 2)
+                    set.mode = 3;
                 else
-                    estado.modo = 1;
+                    set.mode = 1;
                 TFT_Modo();
             }
             else
             {
                 spriteProhibidoCambioModo.pushSprite(20, 20);
-                strcpy(estado.pantalla, "prohibido");
-                timeoutMenu = TIMEOUT_MENU * 1000;
-                timeoutMenuAnt = millis();
+                status.pantalla = PANTALLA_PROHIBIDO;
+                timeDisplayMenu = millis();
             }
         }
         if (checkTouch(SET_AMPERE, x, y))
         {
-            estado.setSeleccion = 10000;
-            timeoutSetSeleccionAnt = millis();
-            timeoutSetSeleccion = TIMEOUT_SET_SELECCION * 1000;
+            status.selUnidad = 1000 * 100;
+            timeSelectionDigit = millis();
         }
         if (checkTouch(SET_AMPERE_100, x, y))
         {
-            estado.setSeleccion = 1000;
-            timeoutSetSeleccionAnt = millis();
-            timeoutSetSeleccion = TIMEOUT_SET_SELECCION * 1000;
+            status.selUnidad = 100 * 100;
+            timeSelectionDigit = millis();
         }
         if (checkTouch(SET_AMPERE_10, x, y))
         {
-            estado.setSeleccion = 100;
-            timeoutSetSeleccionAnt = millis();
-            timeoutSetSeleccion = TIMEOUT_SET_SELECCION * 1000;
+            status.selUnidad = 10 * 100;
+            timeSelectionDigit = millis();
         }
         if (checkTouch(SET_AMPERE_1, x, y))
         {
-            estado.setSeleccion = 10;
+            status.selUnidad = 1 * 100;
         }
         if (checkTouch(SET_VOLTAJE_MINIMO, x, y))
         {
             if (dobleClickAnt == 0)
             {
                 dobleClickAnt = millis();
-                if (estado.setCorteVoltajeMinimo)
-                    estado.setCorteVoltajeMinimo = false;
+                if (set.vCutOff > 0)
+                    set.vCutOff = 0;
                 else
-                    estado.setCorteVoltajeMinimo = true;
-                TFT_CutOffVoltage();
+                    //set.vCutOff = vCutOffEEPROM();
+                    TFT_CutOffVoltage();
             }
             else
             {
-                if (estado.setCorteVoltajeMinimo)
-                    estado.setCorteVoltajeMinimo = false;
-                else
-                    estado.setCorteVoltajeMinimo = true;
                 TFT_CutOffVoltage();
                 seleccionCorte = 1;
-                strcpy(estado.pantalla, "setCorte_V");
-                timeoutMenu = TIMEOUT_MENU * 1000;
-                timeoutMenuAnt = millis();
+                status.pantalla = PANTALLA_SET_CORTE_V;
+                timeDisplayMenu = millis();
             }
         }
         if (checkTouch(SET_TIEMPO, x, y))
@@ -139,23 +128,18 @@ void opcionTouch(int x, int y)
             if (dobleClickAnt == 0)
             {
                 dobleClickAnt = millis();
-                if (estado.setCorteTiempo)
-                    estado.setCorteTiempo = false;
+                if (set.tCutOff > 0)
+                    set.tCutOff = 0;
                 else
-                    estado.setCorteTiempo = true;
-                TFT_CutOffTime();
+                    //set.tCutOff = tCutOffEEPROM();
+                    TFT_CutOffTime();
             }
             else
             {
-                if (estado.setCorteTiempo)
-                    estado.setCorteTiempo = false;
-                else
-                    estado.setCorteTiempo = true;
                 TFT_CutOffTime();
                 seleccionCorte = 1;
-                strcpy(estado.pantalla, "setCorte_Tiempo");
-                timeoutMenu = TIMEOUT_MENU * 1000;
-                timeoutMenuAnt = millis();
+                status.pantalla = PANTALLA_SET_CORTE_TIME;
+                timeDisplayMenu = millis();
             }
         }
 
@@ -164,23 +148,18 @@ void opcionTouch(int x, int y)
             if (dobleClickAnt == 0)
             {
                 dobleClickAnt = millis();
-                if (estado.setCorteTemperatura)
-                    estado.setCorteTemperatura = false;
+                if (set.tempCutOff > 0)
+                    set.tempCutOff = 0;
                 else
-                    estado.setCorteTemperatura = true;
-                TFT_CutOffTemp();
+                    //set.tempCutOff = tempCutOffEEPROM();
+                    TFT_CutOffTemp();
             }
             else
             {
-                if (estado.setCorteTemperatura)
-                    estado.setCorteTemperatura = false;
-                else
-                    estado.setCorteTemperatura = true;
                 TFT_CutOffTemp();
                 seleccionCorte = 1;
-                strcpy(estado.pantalla, "setCorte_Temperatura");
-                timeoutMenu = TIMEOUT_MENU * 1000;
-                timeoutMenuAnt = millis();
+                status.pantalla = PANTALLA_SET_CORTE_TEMP;
+                timeDisplayMenu = millis();
             }
         }
     }

@@ -1,40 +1,35 @@
 void initStatus(void)
 {
+  status.run = false;
   currents.currentA = 0;
   currents.currentB = 0;
   currents.currentTotal = 0;
   status.currents = currents;
-  status.FanRpm = 0;
-  status.run = false;
+  status.voltage = 0;
+  status.power = 0;
   status.temp = 0;
   status.tempDUT = 0;
-  status.time = 0;
+  status.FanPower = 0;
+  status.initTime = 0;
   status.pantalla = 0;
+  status.setCurrent = 0;
+  status.selUnidad = 1 * 100;
 }
 
 void initSet(void)
 {
   set.mode = 1;
-  set.setCurrent = 0;
+  set.selCurrent = 0;
   set.tCutOff = 0;
   set.tempCutOff = 0;
   set.tempCutOffDUT = 0;
   set.vCutOff = 0;
 }
 
-void setearVolt(uint mv, uint vMax)
+void setCurrent(unsigned long ma)
 {
-  float tmp = (65535.0 / vMax);
-
-  uint x = mv * tmp;
-
-  uint8_t xlow = x & 0xff;
-  uint8_t xhigh = (x >> 8);
-
-  digitalWrite(CS_DAC_A, LOW); // SS is pin 10
-  tft.spiwrite(xhigh);
-  tft.spiwrite(xlow);
-  digitalWrite(CS_DAC_A, HIGH);
+  unsigned int mv = ma * 2000.00 / 5000.00; // Obtengo mv necesarios para esos ma.
+  dac.setMillivolts(mv);
 }
 
 void ISRencoder()
@@ -68,13 +63,12 @@ void ISRencoder()
       {
         estado.set = estado.set - estado.setSeleccion; // decrementa POSICION en 1
         timeoutSetSeleccionAnt = millis();
-        CORRECCION_CORRIENTE = 0.0;
         if (estado.set < 0)
           estado.set = 0;
       }
     }
     else
-    { // si B es LOW, senti anti horario
+    { // si B es LOW, sentido anti horario
       if (strcmp(estado.pantalla, "setCorte_V") == 0)
       {
         //estado.setCorteVoltajeMinimo = estado.setCorteVoltajeMinimo + estado.setCorteSeleccion;
@@ -95,14 +89,11 @@ void ISRencoder()
       {
         estado.set = estado.set + estado.setSeleccion; // incrementa POSICION en 1
         timeoutSetSeleccionAnt = millis();
-        CORRECCION_CORRIENTE = 0.0;
         if (200000 < estado.set)
           estado.set = 200000;
       }
     }
     encoderAnt = millis(); // guarda valor actualizado del tiempo
-    actualizarDisplayAnt = 0;
-    actualizarEstadoAnt = 0;
   }
 }
 void ISRtouch()
@@ -117,153 +108,56 @@ void ISRtouch()
   touchAnt = millis();
 }
 
-void readCurrents(void)
+void readCurrentsVoltage(void)
 {
   static byte adc_input = 0;
   static byte adc_reads = 0;
-  static unsigned long sumaMilliamperes = 0;
+  static unsigned long suma = 0;
 
   if (adc.isDataReady())
   {
     if (adc_input == 0)
     {
-      //sumaMilliamperes = sumaMilliamperes + adc.readADC() * MA_MAX / 32767 * 100;
-      Serial.println(adc.readADC());
+      suma = suma + (adc.readADC() * MA_MAX / 32767.00 * 100.00);
       adc_reads++;
       if (adc_reads >= 10)
       {
-        status.currents.currentA = (sumaMilliamperes / 10);
+        status.currents.currentA = (suma / 10);
         status.currents.currentTotal = status.currents.currentA + status.currents.currentB;
         adc.setMultiplexer(0x09);
         adc_reads = 0;
         adc_input = 1;
-        sumaMilliamperes = 0;
-        //Serial.println(status.currents.currentA);
+        suma = 0;
+      }
+    }
+    else if (adc_input == 1)
+    {
+      suma = suma + (adc.readADC() * MA_MAX / 32767.00 * 100.00);
+      adc_reads++;
+      if (adc_reads >= 10)
+      {
+        status.currents.currentB = (suma / 10);
+        status.currents.currentTotal = status.currents.currentA + status.currents.currentB;
+        adc.setMultiplexer(0x05);
+        adc_reads = 0;
+        adc_input = 2;
+        suma = 0;
       }
     }
     else
     {
-      //sumaMilliamperes = sumaMilliamperes + adc.readADC() * MA_MAX / 32767 * 100;
-      Serial.println(adc.readADC());
+      suma = suma + (adc.readADC() * MV_MAX / 32767.00);
       adc_reads++;
       if (adc_reads >= 10)
       {
-        status.currents.currentB = (sumaMilliamperes / 10);
-        status.currents.currentTotal = status.currents.currentA + status.currents.currentB;
+        status.voltage = (suma / 10);
+        status.power = (status.currents.currentTotal / 100.00) * status.voltage;
         adc.setMultiplexer(0x08);
         adc_reads = 0;
         adc_input = 0;
-        sumaMilliamperes = 0;
+        suma = 0;
       }
     }
-  }
-}
-
-/*
-void obtenerCorriente(void)
-{
-  if (conversionActiva and adc.isDataReady())
-  {
-    if (adc_entrada == 0)
-    {
-      estado.i0 = (adc.readADC_Single() * 10);
-      if (estado.i0 < 0)
-        estado.i0 = 0;
-      adc_entrada = 2;
-    }
-    else if (adc_entrada == 1)
-    {
-      estado.i1 = (adc.readADC_Single() * 10);
-      if (estado.i1 < 0)
-        estado.i1 = 0;
-      adc_entrada = 3;
-    }
-    else if (adc_entrada == 2)
-    {
-      estado.temperaturaDisipador = (adc.readADC_Single() - 500) / 10;
-      estado.temperaturaDisipador = estado.temperaturaDisipador * AJUSTE_TEMP;
-      if (estado.coolerDisipadorPotencia > 0)
-      {
-        ledcWrite(0, map(estado.coolerDisipadorPotencia, 1, 100, COOLER_POTENCIA_MINIMA, 255));
-      }
-      else
-      {
-        ledcWrite(0, 0);
-      }
-      adc_entrada = 3;
-    }
-    else if (adc_entrada == 3)
-    {
-      estado.v = adc.readADC_Single();
-      estado.v = estado.v * 10;
-      estado.v = estado.v / CORRECCION_MEDICION_VOLTAJE;
-      if (estado.v < 0)
-        estado.v = 0;
-      adc_entrada = 0;
-    }
-    estado.i = (estado.i0 + estado.i1) * CORRECCION_LECTURA_CORRIENTE;
-
-    int mvCompensacionA = map(estado.i, 10000, 40000, 0, 40 * DERIVA_X_AMPERE);
-
-    //estado.i = estado.i - (uint)((((float)estado.i / 10000) - 1) * DERIVA_X_AMPERE * 10);
-    estado.i = estado.i - (mvCompensacionA);
-
-    int mvCompensacion = map(estado.v, 0, 60000, -90, 450);
-
-    estado.i = estado.i + mvCompensacion;
-
-    conversionActiva = false;
-  }
-  else if ((conversionActiva == false) and ((obtenerCorrienteAnt == 0) or (obtenerCorrienteAnt + (1000 / actualizarEstadoFPS)) < millis())) // Obtiene el voltaje de cada entrada del ADS1115 (ADC).  Cada vez que ejecuta obtiene 1 de las 4 entradas
-  {
-    if (adc_entrada == 0)
-    {
-      adc.setMultiplexer(0x00);
-    }
-    if (adc_entrada == 1)
-    {
-      adc.setMultiplexer(0x00);
-    }
-    if (adc_entrada == 2)
-    {
-      adc.setMultiplexer(0x00);
-    }
-    if (adc_entrada == 3)
-    {
-      adc.setMultiplexer(0x00);
-      obtenerCorrienteAnt = millis();
-    }
-    conversionActiva = true;
-  }
-}
-
-*/
-
-void actualizarEstado(void)
-{
-
-  estado.w = (estado.v * estado.i) / 1000000.00;
-  if (estado.tiempoInicio != 0)
-  {
-    estado.segundos = (millis() - estado.tiempoInicio) / 1000;
-  }
-  if (estado.segundos > segundosAnt)
-  {
-    estado.ah = estado.ah + (estado.i / 3600.00 / 10000.00);
-    segundosAnt = estado.segundos;
-  }
-  // estado.temperaturaDisipador = map(analogRead(tempDisipador), 0, 4095, 0, 330);
-  //Serial.println(estado.temperaturaDisipador);
-  //estado.temperaturaDisipador = estado.temperaturaDisipador + map(analogRead(tempDisipador), 0, 4095, 0, 330);
-  //estado.temperaturaDisipador = (estado.temperaturaDisipador + map(analogRead(tempDisipador), 0, 4095, 0, 330)) / 3;
-  estado.coolerDisipadorPotencia = map(estado.temperaturaDisipador, COOLER_TEMP_MIN, COOLER_TEMP_MAX, 0, 100);
-  if (estado.coolerDisipadorPotencia < 0)
-  {
-    estado.coolerDisipadorPotencia = 0;
-  }
-  else if (estado.coolerDisipadorPotencia > 100)
-  {
-    estado.coolerDisipadorPotencia = 100;
   }
 }
 
@@ -300,14 +194,60 @@ void resetDobliClick(void)
   }
 }
 
-void checkCorteV()
+void powerOn(void)
 {
-  if (estado.estado and estado.setCorteVoltajeMinimo)
   {
-    if ((estado.v / 10) <= estado.corteVoltajeMinimo)
+    status.run = true;
+    TFT_Estado();
+    digitalWrite(REGULATOR_ENABLE, HIGH);
+  }
+}
+
+void powerOff(void)
+{
+  {
+    status.run = false;
+    TFT_Estado();
+    digitalWrite(REGULATOR_ENABLE, LOW);
+  }
+}
+
+void checkCutOffV(void)
+{
+  if (status.run and set.vCutOff > 0)
+  {
+    if (status.voltage >= set.vCutOff)
     {
-      estado.estado = 0;
+      powerOff();
       TFT_Estado();
     }
   }
 }
+
+void powerCooler(void)
+{
+  byte x = 0;
+  if (status.run)
+  {
+    x = map(status.temp, COOLER_TEMP_MIN, COOLER_TEMP_MAX, COOLER_POTENCIA_MINIMA, 255);
+    ledcWrite(0, x);
+    status.FanPower = map(x, COOLER_POTENCIA_MINIMA, 255, 1, 100);
+  }
+  else
+  {
+    x = map(status.temp, COOLER_TEMP_MIN, COOLER_TEMP_MAX, COOLER_POTENCIA_MINIMA, 255);
+    ledcWrite(0, x);
+    status.FanPower = map(x, COOLER_POTENCIA_MINIMA, 255, 1, 100);
+  }
+  // ledcWrite(0, 0);
+}
+
+void adjustCurrent(void){
+
+}
+
+void readTemps(void){
+
+}
+
+
