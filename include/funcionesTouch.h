@@ -87,22 +87,22 @@ void opcionTouch(int x, int y)
         }
         if (checkTouch(SET_AMPERE, x, y))
         {
-            status.selUnidad = 1000 * 100;
+            status.selUnidad = 1000;
             timeSelectionDigit = millis();
         }
         if (checkTouch(SET_AMPERE_100, x, y))
         {
-            status.selUnidad = 100 * 100;
+            status.selUnidad = 100;
             timeSelectionDigit = millis();
         }
         if (checkTouch(SET_AMPERE_10, x, y))
         {
-            status.selUnidad = 10 * 100;
+            status.selUnidad = 10;
             timeSelectionDigit = millis();
         }
         if (checkTouch(SET_AMPERE_1, x, y))
         {
-            status.selUnidad = 1 * 100;
+            status.selUnidad = 1;
         }
         if (checkTouch(SET_VOLTAJE_MINIMO, x, y))
         {

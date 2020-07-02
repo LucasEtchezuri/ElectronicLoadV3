@@ -13,7 +13,7 @@ void initStatus(void)
   status.initTime = 0;
   status.pantalla = 0;
   status.setCurrent = 0;
-  status.selUnidad = 1 * 100;
+  status.selUnidad = 1;
 }
 
 void initSet(void)
@@ -28,8 +28,10 @@ void initSet(void)
 
 void setCurrent(unsigned long ma)
 {
+  SPI.setDataMode(SPI_MODE0);
   unsigned int mv = ma * 2000.00 / 5000.00; // Obtengo mv necesarios para esos ma.
   dac.setMillivolts(mv);
+  SPI.setDataMode(SPI_MODE1);
 }
 
 void ISRencoder()
@@ -45,52 +47,56 @@ void ISRencoder()
   {
     if (digitalRead(ENCODER_B) == HIGH) // si B es HIGH, sentido horario
     {
-      if (strcmp(estado.pantalla, "setCorte_V") == 0)
+      if (status.pantalla == PANTALLA_SET_CORTE_V)
       {
-        estado.corteVoltajeMinimo = estado.corteVoltajeMinimo - seleccionCorte;
+        set.vCutOff = set.vCutOff - seleccionCorte;
       }
-      else if (strcmp(estado.pantalla, "setCorte_Tiempo") == 0)
+      else if (status.pantalla == PANTALLA_SET_CORTE_TIME)
       {
-        estado.corteTiempo = estado.corteTiempo - seleccionCorte;
+        set.tCutOff = set.tCutOff - seleccionCorte;
       }
-      else if (strcmp(estado.pantalla, "setCorte_Temperatura") == 0)
+      else if (status.pantalla == PANTALLA_SET_CORTE_TEMP)
       {
-        estado.corteTemperatura = estado.corteTemperatura + seleccionCorte;
-        if (estado.corteTemperatura > 200)
-          estado.corteTemperatura = 200;
+        set.tempCutOff = set.tempCutOff - seleccionCorte;
+        if (set.tempCutOff > 200)
+          set.tempCutOff = 200;
       }
       else
       {
-        estado.set = estado.set - estado.setSeleccion; // decrementa POSICION en 1
         timeoutSetSeleccionAnt = millis();
-        if (estado.set < 0)
-          estado.set = 0;
+        if (set.selCurrent <= 0)
+          set.selCurrent = 0;
+        else
+        {
+          set.selCurrent = set.selCurrent - status.selUnidad; // decrementa POSICION en 1
+        }
       }
     }
     else
     { // si B es LOW, sentido anti horario
-      if (strcmp(estado.pantalla, "setCorte_V") == 0)
+      if (status.pantalla == PANTALLA_SET_CORTE_V)
       {
-        //estado.setCorteVoltajeMinimo = estado.setCorteVoltajeMinimo + estado.setCorteSeleccion;
-        estado.corteVoltajeMinimo = estado.corteVoltajeMinimo + seleccionCorte;
+        set.vCutOff = set.vCutOff + seleccionCorte;
       }
-      else if (strcmp(estado.pantalla, "setCorte_Tiempo") == 0)
+      else if (status.pantalla == PANTALLA_SET_CORTE_TIME)
       {
-        //estado.setCorteVoltajeMinimo = estado.setCorteVoltajeMinimo + estado.setCorteSeleccion;
-        estado.corteTiempo = estado.corteTiempo + seleccionCorte;
+        set.tCutOff = set.tCutOff + seleccionCorte;
       }
-      else if (strcmp(estado.pantalla, "setCorte_Temperatura") == 0)
+      else if (status.pantalla == PANTALLA_SET_CORTE_TEMP)
       {
-        estado.corteTemperatura = estado.corteTemperatura - seleccionCorte;
-        if (estado.corteTemperatura < 0)
-          estado.corteTemperatura = 0;
+        set.tempCutOff = set.tempCutOff + seleccionCorte;
+        if (set.tempCutOff < 0)
+          set.tempCutOff = 0;
       }
       else
       {
-        estado.set = estado.set + estado.setSeleccion; // incrementa POSICION en 1
         timeoutSetSeleccionAnt = millis();
-        if (200000 < estado.set)
-          estado.set = 200000;
+        if (10000 < set.selCurrent)
+          set.selCurrent = 10000;
+        else
+        {
+          set.selCurrent = set.selCurrent + status.selUnidad;
+        }
       }
     }
     encoderAnt = millis(); // guarda valor actualizado del tiempo
@@ -113,12 +119,16 @@ void readCurrentsVoltage(void)
   static byte adc_input = 0;
   static byte adc_reads = 0;
   static unsigned long suma = 0;
+  //SPI.setDataMode(SPI_MODE1);
 
   if (adc.isDataReady())
   {
     if (adc_input == 0)
     {
-      suma = suma + (adc.readADC() * MA_MAX / 32767.00 * 100.00);
+      Serial.print("adc input 0 = ");
+      Serial.println(adc.readADC());
+      //suma = suma + (adc.readADC() * MA_MAX / 32767.00 * 100.00);
+      suma = suma + (0 * MA_MAX / 32767.00 * 100.00);
       adc_reads++;
       if (adc_reads >= 10)
       {
@@ -126,7 +136,7 @@ void readCurrentsVoltage(void)
         status.currents.currentTotal = status.currents.currentA + status.currents.currentB;
         adc.setMultiplexer(0x09);
         adc_reads = 0;
-        adc_input = 1;
+        //adc_input = 1;
         suma = 0;
       }
     }
@@ -159,6 +169,7 @@ void readCurrentsVoltage(void)
       }
     }
   }
+  //SPI.setDataMode(SPI_MODE0);
 }
 
 void activacionInterrupcionTouch(void)
@@ -242,12 +253,10 @@ void powerCooler(void)
   // ledcWrite(0, 0);
 }
 
-void adjustCurrent(void){
-
+void adjustCurrent(void)
+{
 }
 
-void readTemps(void){
-
+void readTemps(void)
+{
 }
-
-

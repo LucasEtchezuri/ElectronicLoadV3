@@ -161,21 +161,21 @@ void TFT_SetSeleccion(int unidad)
 
 void TFT_Set(void)
 {
-  if (strcmp(estado.pantalla, "principal") == 0)
+  if (status.pantalla == PANTALLA_PRINCIPAL)
   {
-    if (estado.setSeleccion == 10000)
+    if (status.selUnidad == 1000)
     {
       TFT_SetSeleccion(1000);
     }
-    else if (estado.setSeleccion == 1000)
+    else if (status.selUnidad == 100)
     {
       TFT_SetSeleccion(100);
     }
-    else if (estado.setSeleccion == 100)
+    else if (status.selUnidad == 10)
     {
       TFT_SetSeleccion(10);
     }
-    else if (estado.setSeleccion == 10)
+    else if (status.selUnidad == 1)
     {
       TFT_SetSeleccion(1);
     }
@@ -190,7 +190,7 @@ void TFT_Set(void)
 
 void TFT_Set_Corte_V(void)
 {
-  if (strcmp(estado.pantalla, "setCorte_V") == 0)
+  if (status.pantalla == PANTALLA_SET_CORTE_V)
   {
 
     spriteSetCorte.fillRect(5, 50, 270, 145, TFT_BLUE);
@@ -210,7 +210,7 @@ void TFT_Set_Corte_V(void)
     spriteSetCorte.setTextFont(7);
     //spriteSetCorte.setCursor(200, 90);
     spriteSetCorte.setTextColor(TFT_WHITE);
-    spriteSetCorte.drawFloat(estado.corteVoltajeMinimo / 100.00, 2, 200, 90);
+    spriteSetCorte.drawFloat(set.vCutOff / 100.00, 2, 200, 90);
 
     //spriteSetCorte.print(estado.corteVoltajeMinimo / 100.00);
     spriteSetCorte.pushSprite(20, 20);
@@ -219,7 +219,7 @@ void TFT_Set_Corte_V(void)
 
 void TFT_Set_Corte_Tiempo(void)
 {
-  if (strcmp(estado.pantalla, "setCorte_Tiempo") == 0)
+  if (status.pantalla == PANTALLA_SET_CORTE_TIME)
   {
 
     spriteSetCorte.fillRect(5, 50, 270, 145, TFT_BLUE);
@@ -239,16 +239,16 @@ void TFT_Set_Corte_Tiempo(void)
     spriteSetCorte.setTextFont(7);
     //spriteSetCorte.setCursor(200, 90);
     spriteSetCorte.setTextColor(TFT_WHITE);
-    spriteSetCorte.drawNumber(estado.corteTiempo / 60, 140, 90);
+    spriteSetCorte.drawNumber(set.tCutOff / 60, 140, 90);
     spriteSetCorte.drawString(":", 150, 90);
-    spriteSetCorte.drawNumber(estado.corteTiempo - (int)((estado.corteTiempo / 60) * 60), 210, 90);
+    spriteSetCorte.drawNumber(set.tCutOff - (int)((set.tCutOff / 60) * 60), 210, 90);
     spriteSetCorte.pushSprite(20, 20);
   }
 }
 
 void TFT_Set_Corte_Temperatura(void)
 {
-  if (strcmp(estado.pantalla, "setCorte_Temperatura") == 0)
+  if (status.pantalla == PANTALLA_SET_CORTE_TEMP)
   {
 
     spriteSetCorte.fillRect(5, 50, 270, 145, TFT_BLUE);
@@ -258,7 +258,7 @@ void TFT_Set_Corte_Temperatura(void)
     spriteSetCorte.setTextDatum(TR_DATUM);
     spriteSetCorte.setTextFont(7);
     spriteSetCorte.setTextColor(TFT_WHITE);
-    spriteSetCorte.drawNumber(estado.corteTemperatura, 160, 90);
+    spriteSetCorte.drawNumber(set.tempCutOff, 160, 90);
     spriteSetCorte.pushSprite(20, 20);
   }
 }
@@ -441,10 +441,10 @@ void TFT_SpriteCooler(void)
 
 void TFT_DibujaPantallaPrincipal(void)
 {
-  if ((strcmp(estado.pantalla, "prohibido") == 0) and ((millis() - timeDisplayMenu) > (TIMEOUT_MENU * 1000)))
+  if ((status.pantalla == PANTALLA_PROHIBIDO) and ((millis() - timeDisplayMenu) > (TIMEOUT_MENU * 1000)))
   {
     TFT_Pantalla_Completa();
-    strcpy(estado.pantalla, "principal");
+    status.pantalla = PANTALLA_PRINCIPAL;
   }
 }
 
@@ -452,7 +452,7 @@ void TFT_DibujaSetSeleccion(void)
 {
   if ((millis() - timeSelectionDigit) > (TIMEOUT_SET_SELECCION * 1000))
   {
-    estado.setSeleccion = 10;
+    status.selUnidad = 10;
   }
 }
 

@@ -21,7 +21,6 @@ DAC8830 dac;
 // Variables Globales  ----------------
 volatile unsigned int X_Raw;
 volatile unsigned int Y_Raw;
-st_estado estado;
 st_status status;
 st_set set;
 st_currents currents;
@@ -35,11 +34,9 @@ unsigned long timeSelectionDigit = 0;
 unsigned int timeoutSetSeleccion = 0; // Segundos
 unsigned int timeoutSetSeleccionAnt = 0;
 unsigned vMinCant = 0;
-//int32_t segundosAnt = 0;
 int dobleClick = 300;
 int dobleClickAnt = 0;
 int seleccionCorte = 1;
-
 
 // ------------------------------------
 
@@ -56,7 +53,7 @@ void setup(void)
 
   pinMode(ENCODER_A, INPUT);      // ENCODER entrada A
   pinMode(ENCODER_B, INPUT);      // ENCODER entrada B
-  pinMode(ENCODER_BUTTON, INPUT); // ENCODER button
+  //pinMode(ENCODER_BUTTON, INPUT); // ENCODER button
   pinMode(TOUCH_IRQ, INPUT);      // TOUCH IRQ
   pinMode(CS_DAC_A, OUTPUT);      // CS DAC
   pinMode(CS_DAC_B, OUTPUT);      // CS DAC
@@ -66,14 +63,20 @@ void setup(void)
   pinMode(V_SELECT, OUTPUT);      // Sensor Voltaje
   //pinMode(REGULATOR_ENABLE, OUTPUT);      // Sensor Voltaje
 
-  digitalWrite(REGULATOR_ENABLE, LOW); // disable regulator
-
-  //dac.setReference(DAC_REFERENCE);
-  //dac.writeDAC(0);
+  //digitalWrite(REGULATOR_ENABLE, LOW); // disable regulator
 
   tft.init();
 
+  dac.DAC8830_REFERENCE_MV = -1;
+  dac.DAC8830_CS_PIN = CS_DAC_A;
+
+  digitalWrite(CS_DAC_A, HIGH); // Set CS high
+
   adc.begin(14, 32, 13, ADC_CS_PIN, ADC_READY_PIN); // cambiar nueva lib
+
+  dac.setReference(DAC_REFERENCE);
+  dac.writeDAC(0);
+
   adc.setGain(1);
   adc.setConversionMode(0x01); //modo continuo
   adc.setOpMode(0x02);         //Turbo Mode
@@ -121,7 +124,7 @@ void loop()
   resetDobliClick();
 
   readCurrentsVoltage(); // mide la corriente (cada vez que ejecuta mide en una entrada diferente).  Promedia 10 lecturas.
-  TFT_SpriteCooler();    // Dibuja el sprite del cooler
+  TFT_SpriteCooler(); // Dibuja el sprite del cooler
 
   if (status.run)
   {
@@ -130,7 +133,7 @@ void loop()
     //checkCorteTime();
 
     // Frecuencia de actualizar Corriente
-    adjustCurrent();
+    //adjustCurrent();
   }
   else
   {
@@ -150,6 +153,14 @@ void loop()
   {
     readTemps();
     powerCooler();
+    setCurrent(set.selCurrent);
+    readTempsAnt = millis();
+    Serial.print("Actual Current A = ");
+    Serial.println(status.currents.currentA);
+    Serial.print("Actual Current B = ");
+    Serial.println(status.currents.currentB);
+    Serial.print("Actual Voltage");
+    Serial.println(status.voltage);
   }
   //TFT_DibujaPantallaPrincipal(); // Dibuja la pntalla principal solo si paso el timeout (timeoutMenu)
   //TFT_DibujaSetSeleccion();      // Dibuja la pntalla principal solo si paso el timeout (timeoutSetSeleccion)
