@@ -109,7 +109,7 @@ void TFT_Info(void)
     tft.setCursor(260, 55);
     tft.print((float)status.voltage / 1000.00);
     tft.setCursor(260, 70);
-    tft.print(status.currents.currentTotal / 10000.000);
+    tft.print(status.currents.currentTotal / 100.00 / 1000.000);
     tft.setCursor(260, 85);
     tft.print(status.power / 100.00);
     tft.setCursor(260, 100);

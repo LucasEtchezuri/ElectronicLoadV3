@@ -26,11 +26,19 @@ void initSet(void)
   set.vCutOff = 0;
 }
 
-void setCurrent(unsigned long ma)
+void setCurrent(long ma)
 {
   SPI.setDataMode(SPI_MODE0);
-  unsigned int mv = ma * 2000.00 / 5000.00; // Obtengo mv necesarios para esos ma.
-  dac.setMillivolts(mv);
+  int mv = (ma * 2000.00 / 5000.00); // Obtengo mv necesarios para esos ma.
+  if (mv <= 0)
+  {
+    dac.setMillivolts(0);
+  }
+  else
+  {
+    dac.setMillivolts(mv);
+  }
+
   SPI.setDataMode(SPI_MODE1);
 }
 
@@ -119,24 +127,21 @@ void readCurrentsVoltage(void)
   static byte adc_input = 0;
   static byte adc_reads = 0;
   static unsigned long suma = 0;
-  //SPI.setDataMode(SPI_MODE1);
+  SPI.setDataMode(SPI_MODE1);
 
   if (adc.isDataReady())
   {
     if (adc_input == 0)
     {
-      Serial.print("adc input 0 = ");
-      Serial.println(adc.readADC());
-      //suma = suma + (adc.readADC() * MA_MAX / 32767.00 * 100.00);
-      suma = suma + (0 * MA_MAX / 32767.00 * 100.00);
+      suma = suma + (adc.readADC() * MA_MAX / 32767.00 * 100.00);
       adc_reads++;
-      if (adc_reads >= 10)
+      if (adc_reads >= 100)
       {
-        status.currents.currentA = (suma / 10);
+        status.currents.currentA = (suma / 100);
         status.currents.currentTotal = status.currents.currentA + status.currents.currentB;
         adc.setMultiplexer(0x09);
         adc_reads = 0;
-        //adc_input = 1;
+        adc_input = 1;
         suma = 0;
       }
     }
@@ -144,9 +149,10 @@ void readCurrentsVoltage(void)
     {
       suma = suma + (adc.readADC() * MA_MAX / 32767.00 * 100.00);
       adc_reads++;
-      if (adc_reads >= 10)
+      if (adc_reads >= 100)
       {
-        status.currents.currentB = (suma / 10);
+        status.currents.currentB = (suma / 100);
+        status.currents.currentB = 0;    //quitar cuando agrego el otro modulo
         status.currents.currentTotal = status.currents.currentA + status.currents.currentB;
         adc.setMultiplexer(0x05);
         adc_reads = 0;
@@ -169,7 +175,7 @@ void readCurrentsVoltage(void)
       }
     }
   }
-  //SPI.setDataMode(SPI_MODE0);
+  SPI.setDataMode(SPI_MODE0);
 }
 
 void activacionInterrupcionTouch(void)
@@ -247,7 +253,8 @@ void powerCooler(void)
   else
   {
     x = map(status.temp, COOLER_TEMP_MIN, COOLER_TEMP_MAX, COOLER_POTENCIA_MINIMA, 255);
-    ledcWrite(0, x);
+    //ledcWrite(0, x);
+    ledcWrite(0, 255);
     status.FanPower = map(x, COOLER_POTENCIA_MINIMA, 255, 1, 100);
   }
   // ledcWrite(0, 0);
