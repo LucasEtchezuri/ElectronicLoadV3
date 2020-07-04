@@ -253,11 +253,10 @@ void powerCooler(void)
   else
   {
     x = map(status.temp, COOLER_TEMP_MIN, COOLER_TEMP_MAX, COOLER_POTENCIA_MINIMA, 255);
-    //ledcWrite(0, x);
-    ledcWrite(0, 255);
+    ledcWrite(0, x);
     status.FanPower = map(x, COOLER_POTENCIA_MINIMA, 255, 1, 100);
   }
-  // ledcWrite(0, 0);
+  ledcWrite(0, 0);
 }
 
 void adjustCurrent(void)

@@ -1,5 +1,15 @@
 #include <Arduino.h>
-#include <User_Setup.h>
+
+//---------------------------------------------------------------
+#include <User_Setup.h> //
+// User_Setup.h se sobreescribe al actualizar la libreria. Setear los siguientes pines:
+//#define TFT_MOSI 13
+//#define TFT_SCLK 14
+//#define TFT_CS   17  // Chip select control pin
+//#define TFT_DC    16  // Data Command control pin
+//#define TFT_RST   22  // Reset pin (could connect to RST pin)
+//Setar la frecuencia en 10MHZ
+
 #include <TFT_Touch.h>
 #include <TFT_eSPI.h> // Graphics and font library for ILI9341 driver chip
 #include <SPI.h>
@@ -54,37 +64,32 @@ void setup(void)
   pinMode(ENCODER_A, INPUT); // ENCODER entrada A
   pinMode(ENCODER_B, INPUT); // ENCODER entrada B
   //pinMode(ENCODER_BUTTON, INPUT); // ENCODER button
-  pinMode(TOUCH_IRQ, INPUT);     // TOUCH IRQ
-  pinMode(CS_DAC_A, OUTPUT);     // CS DAC
+  pinMode(TOUCH_IRQ, INPUT); // TOUCH IRQ
+  pinMode(CS_DAC_A, OUTPUT); // CS DAC
   pinMode(CS_DAC_B, OUTPUT);     // CS DAC
-  pinMode(ADC_READY_PIN, INPUT); // ADC ready conversion
-  pinMode(FAN, OUTPUT);          // Fan Externo PWM
+  pinMode(FAN, OUTPUT); // Fan Externo PWM
   pinMode(BUZZER, OUTPUT);       // Buzzer
   pinMode(V_SELECT, OUTPUT);     // Sensor Voltaje
   //pinMode(REGULATOR_ENABLE, OUTPUT);      // Sensor Voltaje
-
   //digitalWrite(REGULATOR_ENABLE, LOW); // disable regulator
 
   tft.init();
 
-  adc.begin(14, 32, 13, ADC_CS_PIN, ADC_READY_PIN); // cambiar nueva lib
+  adc.begin(14, 32, 13, ADC_CS_PIN, ADC_READY_PIN);
 
   dac.DAC8830_REFERENCE_MV = -1;
   dac.DAC8830_CS_PIN = CS_DAC_A;
-
   digitalWrite(CS_DAC_A, HIGH); // Set CS high
-
   dac.setReference(DAC_REFERENCE);
   dac.writeDAC(0);
 
   adc.setGain(1);
-  adc.setOpMode(0x02);         //Turbo Mode
-  adc.setDataRate(0x06);       // 2000SPS
+  adc.setOpMode(0x02);   //Turbo Mode
+  adc.setDataRate(0x06); // 2000SPS
   adc.setConversionMode(0x01); //modo continuo
-  adc.setMultiplexer(0x08);    // AIN0
+  adc.setMultiplexer(0x08); // AIN0
   adc.setVoltageRef(0);
 
-  
   ledcSetup(0, 15000, 8); // Set PWM FAN
   ledcAttachPin(FAN, 0);  // Set PWM FAN
 
@@ -118,7 +123,7 @@ void setup(void)
 
 void loop()
 {
-
+ 
   static unsigned long refreshDisplayAnt = 0;
   static unsigned long readTempsAnt = 0;
 
@@ -127,7 +132,7 @@ void loop()
   resetDobliClick();
 
   readCurrentsVoltage(); // mide la corriente (cada vez que ejecuta mide en una entrada diferente).  Promedia 10 lecturas.
-  TFT_SpriteCooler();    // Dibuja el sprite del cooler
+  TFT_SpriteCooler(); // Dibuja el sprite del cooler
 
   if (status.run)
   {
@@ -154,7 +159,7 @@ void loop()
 
   if ((readTempsAnt == 0) or ((readTempsAnt + (TIME_READ_TEMPS * 1000)) < millis())) // LECTURA TEMP Y SET COOLER
   {
-    readTemps();
+    //readTemps();
     powerCooler();
     setCurrent(set.selCurrent);
     readTempsAnt = millis();
@@ -167,8 +172,8 @@ void loop()
     //Serial.print("Actual Voltage");
     //Serial.println(status.voltage);
   }
-  //TFT_DibujaPantallaPrincipal(); // Dibuja la pntalla principal solo si paso el timeout (timeoutMenu)
-  //TFT_DibujaSetSeleccion();      // Dibuja la pntalla principal solo si paso el timeout (timeoutSetSeleccion)
+  TFT_DibujaPantallaPrincipal(); // Dibuja la pntalla principal solo si paso el timeout (timeoutMenu)
+  TFT_DibujaSetSeleccion();      // Dibuja la pntalla principal solo si paso el timeout (timeoutSetSeleccion)
 
   if (X_Raw != 0 or Y_Raw != 0)
   {

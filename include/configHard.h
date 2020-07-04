@@ -10,7 +10,7 @@
 // ENCODER
 #define ENCODER_A 5
 #define ENCODER_B 23
-#define ENCODER_BUTTON 32
+//#define ENCODER_BUTTON 32
 
 // ---------------------------------------------------------------------
 
