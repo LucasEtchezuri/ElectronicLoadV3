@@ -66,10 +66,10 @@ void setup(void)
   //pinMode(ENCODER_BUTTON, INPUT); // ENCODER button
   pinMode(TOUCH_IRQ, INPUT); // TOUCH IRQ
   pinMode(CS_DAC_A, OUTPUT); // CS DAC
-  pinMode(CS_DAC_B, OUTPUT);     // CS DAC
-  pinMode(FAN, OUTPUT); // Fan Externo PWM
-  pinMode(BUZZER, OUTPUT);       // Buzzer
-  pinMode(V_SELECT, OUTPUT);     // Sensor Voltaje
+  pinMode(CS_DAC_B, OUTPUT); // CS DAC
+  pinMode(FAN, OUTPUT);      // Fan Externo PWM
+  pinMode(BUZZER, OUTPUT);   // Buzzer
+  pinMode(V_SELECT, OUTPUT); // Sensor Voltaje
   //pinMode(REGULATOR_ENABLE, OUTPUT);      // Sensor Voltaje
   //digitalWrite(REGULATOR_ENABLE, LOW); // disable regulator
 
@@ -84,10 +84,10 @@ void setup(void)
   dac.writeDAC(0);
 
   adc.setGain(1);
-  adc.setOpMode(0x02);   //Turbo Mode
-  adc.setDataRate(0x06); // 2000SPS
+  adc.setOpMode(0x02);         //Turbo Mode
+  adc.setDataRate(0x06);       // 2000SPS
   adc.setConversionMode(0x01); //modo continuo
-  adc.setMultiplexer(0x08); // AIN0
+  adc.setMultiplexer(0x08);    // AIN0
   adc.setVoltageRef(0);
 
   ledcSetup(0, 15000, 8); // Set PWM FAN
@@ -118,12 +118,15 @@ void setup(void)
   TFT_Pantalla_SplashScreen(); // Dibujo de la pantall de bienvenida
   TFT_Pantalla_Completa();     // Dibujo de la pantalla principal y todos los valores
   TFT_DatosEnPantalla();
+  TFT_Set_Corte_V(); //Grafica el valor de SET de Corte
+  TFT_Set_Corte_Tiempo();
+  TFT_Set_Corte_Temperatura();
   delay(500);
 }
 
 void loop()
 {
- 
+
   static unsigned long refreshDisplayAnt = 0;
   static unsigned long readTempsAnt = 0;
 
@@ -132,7 +135,7 @@ void loop()
   resetDobliClick();
 
   readCurrentsVoltage(); // mide la corriente (cada vez que ejecuta mide en una entrada diferente).  Promedia 10 lecturas.
-  TFT_SpriteCooler(); // Dibuja el sprite del cooler
+  TFT_SpriteCooler();    // Dibuja el sprite del cooler
 
   if (status.run)
   {
@@ -149,19 +152,15 @@ void loop()
 
   if ((refreshDisplayAnt == 0) or ((refreshDisplayAnt + (1000 / FPS_DISPLAY)) < millis())) // FRECUENCIA DE ACTUALIZACION TFT
   {
-    TFT_Info();        //Grafica el recuadro de Info con los valores
-    TFT_Set();         //Grafica el valor de SET
-    TFT_Set_Corte_V(); //Grafica el valor de SET de Corte
-    TFT_Set_Corte_Tiempo();
-    TFT_Set_Corte_Temperatura();
+    TFT_Info(); //Grafica el recuadro de Info con los valores
     refreshDisplayAnt = millis();
   }
 
   if ((readTempsAnt == 0) or ((readTempsAnt + (TIME_READ_TEMPS * 1000)) < millis())) // LECTURA TEMP Y SET COOLER
   {
-    //readTemps();
+    readTemps();
     powerCooler();
-    setCurrent(set.selCurrent);
+    //setCurrent(set.selCurrent);
     readTempsAnt = millis();
     Serial.print("Actual Current A = ");
     Serial.println(status.currents.currentA / 100.00);
@@ -169,11 +168,11 @@ void loop()
     Serial.println(status.currents.currentB / 100.00);
     Serial.print("Current total = ");
     Serial.println(status.currents.currentTotal / 100.00);
-    //Serial.print("Actual Voltage");
-    //Serial.println(status.voltage);
+    Serial.print("Actual Voltage");
+    Serial.println(status.voltage);
   }
-  TFT_DibujaPantallaPrincipal(); // Dibuja la pntalla principal solo si paso el timeout (timeoutMenu)
-  TFT_DibujaSetSeleccion();      // Dibuja la pntalla principal solo si paso el timeout (timeoutSetSeleccion)
+  // TFT_DibujaPantallaPrincipal(); // Dibuja la pntalla principal solo si paso el timeout (timeoutMenu)
+  TFT_DibujaSetSeleccion(); // Dibuja la pntalla principal solo si paso el timeout (timeoutSetSeleccion)
 
   if (X_Raw != 0 or Y_Raw != 0)
   {

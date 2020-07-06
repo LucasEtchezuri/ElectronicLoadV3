@@ -211,7 +211,6 @@ void TFT_Set_Corte_V(void)
     //spriteSetCorte.setCursor(200, 90);
     spriteSetCorte.setTextColor(TFT_WHITE);
     spriteSetCorte.drawFloat(set.vCutOff / 100.00, 2, 200, 90);
-
     //spriteSetCorte.print(estado.corteVoltajeMinimo / 100.00);
     spriteSetCorte.pushSprite(20, 20);
   }
