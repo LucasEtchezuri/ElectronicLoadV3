@@ -41,8 +41,8 @@ unsigned int encoderDebounce = 50;
 volatile unsigned int encoderAnt = 0;
 unsigned long timeDisplayMenu = 0;
 unsigned long timeSelectionDigit = 0;
-unsigned int timeoutSetSeleccion = 0; // Segundos
-unsigned int timeoutSetSeleccionAnt = 0;
+unsigned long timeSetCurrentAnt = 0;
+bool dibujaSet = false;
 unsigned vMinCant = 0;
 int dobleClick = 300;
 int dobleClickAnt = 0;
@@ -143,11 +143,22 @@ void loop()
     //checkCorteTemp();
     //checkCorteTime();
 
+    if ((timeSetCurrentAnt == 0) or ((timeSetCurrentAnt + (1000 / FPS_SET_CURRENT)) < millis())) // FRECUENCIA DE ACTUALIZACION DAC
+    {
+      setCurrent(set.selCurrent);
+      timeSetCurrentAnt = millis();
+    }
+
     // Frecuencia de actualizar Corriente
     //adjustCurrent();
   }
   else
   {
+    if ((timeSetCurrentAnt == 0) or ((timeSetCurrentAnt + (1000 / FPS_SET_CURRENT)) < millis())) // FRECUENCIA DE ACTUALIZACION DAC
+    {
+      setCurrent(0);
+      timeSetCurrentAnt = millis();
+    }
   }
 
   if ((refreshDisplayAnt == 0) or ((refreshDisplayAnt + (1000 / FPS_DISPLAY)) < millis())) // FRECUENCIA DE ACTUALIZACION TFT
@@ -160,7 +171,6 @@ void loop()
   {
     readTemps();
     powerCooler();
-    //setCurrent(set.selCurrent);
     readTempsAnt = millis();
     Serial.print("Actual Current A = ");
     Serial.println(status.currents.currentA / 100.00);
@@ -171,8 +181,9 @@ void loop()
     Serial.print("Actual Voltage");
     Serial.println(status.voltage);
   }
-  // TFT_DibujaPantallaPrincipal(); // Dibuja la pntalla principal solo si paso el timeout (timeoutMenu)
-  TFT_DibujaSetSeleccion(); // Dibuja la pntalla principal solo si paso el timeout (timeoutSetSeleccion)
+  //TFT_DibujaPantallaPrincipal(); // Dibuja la pntalla principal solo si paso el timeout (timeoutMenu)
+
+  TFT_Dibuja(); // Dibuja la pntalla principal solo si paso el timeout (timeoutSetSeleccion)
 
   if (X_Raw != 0 or Y_Raw != 0)
   {

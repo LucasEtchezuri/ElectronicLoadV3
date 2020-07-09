@@ -71,13 +71,14 @@ void ISRencoder()
       }
       else
       {
-        timeoutSetSeleccionAnt = millis();
-        if (set.selCurrent <= 0)
+        timeSelectionDigit = millis();
+        if (set.selCurrent - status.selUnidad <= 0)
           set.selCurrent = 0;
         else
         {
           set.selCurrent = set.selCurrent - status.selUnidad; // decrementa POSICION en 1
         }
+        dibujaSet=true;
       }
     }
     else
@@ -98,13 +99,14 @@ void ISRencoder()
       }
       else
       {
-        timeoutSetSeleccionAnt = millis();
-        if (10000 < set.selCurrent)
-          set.selCurrent = 10000;
+        timeSelectionDigit = millis();
+        if (MAX_AMP <= set.selCurrent + status.selUnidad)
+          set.selCurrent = MAX_AMP;
         else
         {
           set.selCurrent = set.selCurrent + status.selUnidad;
         }
+        dibujaSet=true;
       }
     }
     encoderAnt = millis(); // guarda valor actualizado del tiempo
@@ -126,7 +128,7 @@ void readCurrentsVoltage(void)
 {
   static byte adc_input = 0;
   static byte adc_reads = 0;
-  static unsigned long suma = 0;
+  static long suma = 0;
   SPI.setDataMode(SPI_MODE1);
 
   if (adc.isDataReady())
@@ -135,9 +137,9 @@ void readCurrentsVoltage(void)
     {
       suma = suma + (adc.readADC() * MA_MAX / 32767.00 * 100.00);
       adc_reads++;
-      if (adc_reads >= 100)
+      if (adc_reads >= 50)
       {
-        status.currents.currentA = (suma / 100);
+        status.currents.currentA = (suma / 50);
         status.currents.currentTotal = status.currents.currentA + status.currents.currentB;
         adc.setMultiplexer(0x09);
         adc_reads = 0;
@@ -149,9 +151,9 @@ void readCurrentsVoltage(void)
     {
       suma = suma + (adc.readADC() * MA_MAX / 32767.00 * 100.00);
       adc_reads++;
-      if (adc_reads >= 100)
+      if (adc_reads >= 50)
       {
-        status.currents.currentB = (suma / 100);
+        status.currents.currentB = (suma / 50);
         status.currents.currentB = 0;    //quitar cuando agrego el otro modulo
         status.currents.currentTotal = status.currents.currentA + status.currents.currentB;
         adc.setMultiplexer(0x05);
@@ -164,10 +166,10 @@ void readCurrentsVoltage(void)
     {
       suma = suma + (adc.readADC() * MV_MAX / 32767.00);
       adc_reads++;
-      if (adc_reads >= 10)
+      if (adc_reads >= 50)
       {
-        status.voltage = (suma / 10);
-        status.power = (status.currents.currentTotal / 100.00) * status.voltage;
+        status.voltage = (suma / 50);
+        status.power = ((status.currents.currentTotal / 100.00) * status.voltage) / 1000;
         adc.setMultiplexer(0x08);
         adc_reads = 0;
         adc_input = 0;

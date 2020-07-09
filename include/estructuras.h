@@ -8,8 +8,8 @@ struct st_currents
 struct st_set
 {
   byte mode;              // Modo (0=I   1=V    2=P)
-  unsigned int selCurrent; //milliamp - Select Current.  (different of SET current)
-  unsigned int vCutOff;   //millivolts  (0 = disabled)
+  int selCurrent; //milliamp - Select Current.  (different of SET current)
+  int vCutOff;   //millivolts  (0 = disabled)
   int tempCutOff;         // (0 = disabled)
   int tempCutOffDUT;      // (0 = disabled)
   unsigned int tCutOff;   // time in seconds to CutOff

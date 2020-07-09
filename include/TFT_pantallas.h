@@ -4,7 +4,6 @@
 #define PANTALLA_SET_CORTE_TIME 3
 #define PANTALLA_SET_CORTE_TEMP 4
 
-
 void TFT_Pantalla_SplashScreen(void)
 {
   tft.fillScreen(TFT_BLACK); // a background colour defined
@@ -109,9 +108,9 @@ void TFT_Info(void)
     tft.setCursor(260, 55);
     tft.print((float)status.voltage / 1000.00);
     tft.setCursor(260, 70);
-    tft.print(status.currents.currentTotal / 100.00 / 1000.000);
+    tft.print(status.currents.currentTotal / 100.00 / 1000.00);
     tft.setCursor(260, 85);
-    tft.print(status.power / 100.00);
+    tft.print(status.power / 1000.00);
     tft.setCursor(260, 100);
     tft.print(millis() - status.initTime);
     tft.setCursor(260, 115);
@@ -157,7 +156,6 @@ void TFT_SetSeleccion(int unidad)
     tft.fillRoundRect(17, 50, 150, 5, 2, TFT_WHITE);
   }
 }
-
 
 void TFT_Set(void)
 {
@@ -447,19 +445,28 @@ void TFT_DibujaPantallaPrincipal(void)
   }
 }
 
-void TFT_DibujaSetSeleccion(void)
+void TFT_Dibuja(void)
 {
+  if (status.pantalla == PANTALLA_PRINCIPAL)
+  {
+    if (dibujaSet == true)
+    {
+      TFT_Set();
+      dibujaSet=false;
+    }
+  }
+
   if ((millis() - timeSelectionDigit) > (TIMEOUT_SET_SELECCION * 1000))
   {
-    status.selUnidad = 10;
+    status.selUnidad = 1;
+    //TFT_Set();
   }
 }
 
 void TFT_DatosEnPantalla(void)
 {
-  TFT_Set();
   if (status.pantalla == PANTALLA_PRINCIPAL)
   {
-    
+    TFT_Set();
   }
 }

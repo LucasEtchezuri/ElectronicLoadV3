@@ -89,20 +89,24 @@ void opcionTouch(int x, int y)
         {
             status.selUnidad = 1000;
             timeSelectionDigit = millis();
+            dibujaSet=true;
         }
         if (checkTouch(SET_AMPERE_100, x, y))
         {
             status.selUnidad = 100;
             timeSelectionDigit = millis();
+            dibujaSet=true;
         }
         if (checkTouch(SET_AMPERE_10, x, y))
         {
             status.selUnidad = 10;
             timeSelectionDigit = millis();
+            dibujaSet=true;
         }
         if (checkTouch(SET_AMPERE_1, x, y))
         {
             status.selUnidad = 1;
+            dibujaSet=true;
         }
         if (checkTouch(SET_VOLTAJE_MINIMO, x, y))
         {

@@ -1,5 +1,5 @@
-#define MA_MAX  5.00   //  Aca va el valor de MA que representa una salida de 2000mv del INA. (En mi caos use un INA de 400mv por Ampere.  por lo tanto si la salida es 2000mv serian 5000ma)
-#define MV_MAX  48000.00   //  Aca va el valor de MV que representa una salida de 2000mv en el divisor de voltage que entra al ADC
+#define MA_MAX  5000.00   //  Aca va el valor de MA que representa una salida de 2000mv del INA. (En mi caos use un INA de 400mv por Ampere.  por lo tanto si la salida es 2000mv serian 5000ma)
+#define MV_MAX  22000.00   //  Aca va el valor de MV que representa una salida de 2000mv en el divisor de voltage que entra al ADC
 
 // TOUCH
 // These are the default min and maximum values, set to 0 and 4095 to test the screen
@@ -44,9 +44,14 @@
 
 #define FPS_DISPLAY 10
 
+#define FPS_SET_CURRENT 2           // Veces por segundo que seteo la corriente
+
 #define TIME_READ_TEMPS 1           // seconds
 
 #define DESFASEMV_0V 4
 //#define DESFASEMV_2V -80
+
+#define MAX_AMP 20000   // Max amperaje de la carga en ma
+
 
 
