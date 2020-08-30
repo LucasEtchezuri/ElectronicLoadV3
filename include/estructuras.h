@@ -42,6 +42,7 @@ struct st_area
 st_area ONOFF;
 st_area MODE;
 st_area SET_AMPERE;
+st_area SET_DECIMAL;
 st_area SET_AMPERE_100;
 st_area SET_AMPERE_10;
 st_area SET_AMPERE_1;

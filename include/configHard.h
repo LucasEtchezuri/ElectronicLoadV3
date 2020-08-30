@@ -9,8 +9,8 @@
 
 // ENCODER
 #define ENCODER_A 5
-#define ENCODER_B 23
-//#define ENCODER_BUTTON 32
+#define ENCODER_B 36
+#define ENCODER_BUTTON 34
 
 // ---------------------------------------------------------------------
 
@@ -32,14 +32,22 @@
 // ---------------------------------------------------------------------
 
 // Buzzer
-#define BUZZER 19
+//#define BUZZER 19
 // ---------------------------------------------------------------------
 
 // V Input Select
-#define V_SELECT 36
+#define V_SELECT 23
+
 // ---------------------------------------------------------------------
 
-#define REGULATOR_ENABLE 34
+#define REGULATOR_ENABLE 12
 
+// ---------------------------------------------------------------------
+
+//#define TEMP_DISIPADOR 35
+
+#define TEMP_DISIPADOR 19
+
+#define TEMP_DUT 39
 
 

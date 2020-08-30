@@ -112,7 +112,7 @@ void TFT_Info(void)
     tft.setCursor(260, 85);
     tft.print(status.power / 1000.00);
     tft.setCursor(260, 100);
-    tft.print(millis() - status.initTime);
+    tft.print((millis() - status.initTime) / 1000);
     tft.setCursor(260, 115);
     tft.print("watt");
 
@@ -124,7 +124,7 @@ void TFT_Info(void)
     tft.setCursor(92, 204);
     tft.print("             ");
     tft.setCursor(92, 204);
-    tft.print(status.temp);
+    tft.print((int)status.temp);
     tft.setCursor(92, 220);
     tft.print("             ");
     tft.setCursor(92, 220);
@@ -139,17 +139,17 @@ void TFT_SetSeleccion(int unidad)
   if (unidad == 1000)
   {
     tft.fillRoundRect(17, 50, 150, 5, 2, TFT_WHITE);
-    tft.fillRoundRect(17, 50, 27, 5, 2, TFT_BLACK);
+    tft.fillRoundRect(17, 50, 54, 5, 2, TFT_BLACK);
   }
   else if (unidad == 100)
   {
     tft.fillRoundRect(17, 50, 150, 5, 2, TFT_WHITE);
-    tft.fillRoundRect(62, 50, 27, 5, 2, TFT_BLACK);
+    tft.fillRoundRect(93, 50, 27, 5, 2, TFT_BLACK);
   }
   else if (unidad == 10)
   {
     tft.fillRoundRect(17, 50, 150, 5, 2, TFT_WHITE);
-    tft.fillRoundRect(93, 50, 27, 5, 2, TFT_BLACK);
+    tft.fillRoundRect(124, 50, 27, 5, 2, TFT_BLACK);
   }
   else if (unidad == 1)
   {
@@ -182,7 +182,15 @@ void TFT_Set(void)
     tft.setTextFont(7);
     tft.setTextColor(TFT_BLACK, TFT_WHITE); // Font blanco.. Sin color de fondo
     tft.setCursor(tft_pos_set_x, tft_pos_set_y);
-    tft.drawFloat(set.selCurrent / 1000.00, 3, tft_pos_set_x, tft_pos_set_y + 50);
+    if (set.selCurrent >= 10000)
+    {
+      tft.drawFloat(set.selCurrent / 1000.00, 3, tft_pos_set_x, tft_pos_set_y + 50);
+    }
+    else
+    {
+      tft.drawString("        ", tft_pos_set_x, tft_pos_set_y + 50);
+      tft.drawFloat(set.selCurrent / 1000.00, 3, tft_pos_set_x + 32, tft_pos_set_y + 50);
+    }
   }
 }
 
@@ -452,14 +460,17 @@ void TFT_Dibuja(void)
     if (dibujaSet == true)
     {
       TFT_Set();
-      dibujaSet=false;
+      dibujaSet = false;
     }
   }
 
   if ((millis() - timeSelectionDigit) > (TIMEOUT_SET_SELECCION * 1000))
   {
-    status.selUnidad = 1;
-    //TFT_Set();
+    if (status.selUnidad != 1)
+    {
+      status.selUnidad = 1;
+      TFT_Set();
+    }
   }
 }
 

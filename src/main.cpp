@@ -15,9 +15,14 @@
 #include <SPI.h>
 #include <ADS1120.h>
 #include <DAC8830.h>
+#include <OneWire.h>
+#include <DS18B20.h>
 
 #include "estructuras.h"
 #include "configHard.h"
+
+OneWire oneWire(TEMP_DISIPADOR);
+DS18B20 sensor(&oneWire);
 
 TFT_Touch touch = TFT_Touch(DCS, DCLK, DIN, DOUT); /* Create an instance of TOUCH */
 TFT_eSPI tft = TFT_eSPI();                         /* Create an instance of TFT screen */
@@ -26,7 +31,8 @@ TFT_eSprite spriteProhibidoCambioModo = TFT_eSprite(&tft);
 TFT_eSprite spriteSetCorte = TFT_eSprite(&tft);
 
 ADS1120 adc;
-DAC8830 dac;
+DAC8830 dacA;
+DAC8830 dacB;
 
 // Variables Globales  ----------------
 volatile unsigned int X_Raw;
@@ -59,29 +65,40 @@ int seleccionCorte = 1;
 
 void setup(void)
 {
+
+  pinMode(ENCODER_A, INPUT);            // ENCODER entrada A
+  pinMode(ENCODER_B, INPUT);            // ENCODER entrada B
+  pinMode(ENCODER_BUTTON, INPUT);       // ENCODER button
+  pinMode(TOUCH_IRQ, INPUT);            // TOUCH IRQ
+  pinMode(CS_DAC_A, OUTPUT);            // CS DAC
+  pinMode(CS_DAC_B, OUTPUT);            // CS DAC
+  pinMode(FAN, OUTPUT);                 // Fan Externo PWM
+  //pinMode(BUZZER, OUTPUT);              // Buzzer
+  pinMode(V_SELECT, OUTPUT);            // Sensor Voltaje
+  pinMode(REGULATOR_ENABLE, OUTPUT);    // Sensor Voltaje
+  digitalWrite(REGULATOR_ENABLE, HIGH); // disable regulator  Dejar siempre elimentaado. si no se alimenta hace cualquier cosa.
+  pinMode(TEMP_DISIPADOR, INPUT);
+
   Serial.begin(115200);
 
-  pinMode(ENCODER_A, INPUT); // ENCODER entrada A
-  pinMode(ENCODER_B, INPUT); // ENCODER entrada B
-  //pinMode(ENCODER_BUTTON, INPUT); // ENCODER button
-  pinMode(TOUCH_IRQ, INPUT); // TOUCH IRQ
-  pinMode(CS_DAC_A, OUTPUT); // CS DAC
-  pinMode(CS_DAC_B, OUTPUT); // CS DAC
-  pinMode(FAN, OUTPUT);      // Fan Externo PWM
-  pinMode(BUZZER, OUTPUT);   // Buzzer
-  pinMode(V_SELECT, OUTPUT); // Sensor Voltaje
-  //pinMode(REGULATOR_ENABLE, OUTPUT);      // Sensor Voltaje
-  //digitalWrite(REGULATOR_ENABLE, LOW); // disable regulator
+  dacA.DAC8830_REFERENCE_MV = -1;
+  dacA.DAC8830_CS_PIN = CS_DAC_A;
+  digitalWrite(CS_DAC_A, HIGH); // Set CS high
+  dacA.setReference(DAC_REFERENCE);
+  dacA.writeDAC(0);
+
+  dacB.DAC8830_REFERENCE_MV = -1;
+  dacB.DAC8830_CS_PIN = CS_DAC_B;
+  digitalWrite(CS_DAC_B, HIGH); // Set CS high
+  dacB.setReference(DAC_REFERENCE);
+  dacB.writeDAC(0);
+
+  sensor.begin();
+
 
   tft.init();
 
   adc.begin(14, 32, 13, ADC_CS_PIN, ADC_READY_PIN);
-
-  dac.DAC8830_REFERENCE_MV = -1;
-  dac.DAC8830_CS_PIN = CS_DAC_A;
-  digitalWrite(CS_DAC_A, HIGH); // Set CS high
-  dac.setReference(DAC_REFERENCE);
-  dac.writeDAC(0);
 
   adc.setGain(1);
   adc.setOpMode(0x02);         //Turbo Mode
@@ -90,13 +107,13 @@ void setup(void)
   adc.setMultiplexer(0x08);    // AIN0
   adc.setVoltageRef(0);
 
-  ledcSetup(0, 15000, 8); // Set PWM FAN
-  ledcAttachPin(FAN, 0);  // Set PWM FAN
+  ledcSetup(0, 1000, 8); // Set PWM FAN
+  ledcAttachPin(FAN, 0); // Set PWM FAN
 
   cargarCoordenadas(); // setea los valores de coordenadas de TFT de las opciones
   initStatus();        // init status structure
   initSet();           // init set structure
-  setCurrent(set.selCurrent);
+  //setCurrent(set.selCurrent);
 
   attachInterrupt(digitalPinToInterrupt(ENCODER_A), ISRencoder, FALLING); // interrupcion sobre pin A del encoder
   attachInterrupt(digitalPinToInterrupt(TOUCH_IRQ), ISRtouch, FALLING);   // interrupcion del touch 1=normal   0=Presionado
@@ -112,7 +129,7 @@ void setup(void)
 
   tft.setRotation(TFT_ORIENTACION);
   touch.setCal(HMIN, HMAX, VMIN, VMAX, HRES, VRES, XYSWAP); // Raw xmin, xmax, ymin, ymax, width, height
-  touch.setRotation(2);
+  //touch.setRotation(2);
 
   TFT_Creacion_Sprites();      // Creacion de los sprites
   TFT_Pantalla_SplashScreen(); // Dibujo de la pantall de bienvenida
@@ -126,10 +143,10 @@ void setup(void)
 
 void loop()
 {
-
   static unsigned long refreshDisplayAnt = 0;
   static unsigned long readTempsAnt = 0;
 
+  
   activacionInterrupcionTouch();   // debounce y activacion de la interrupcion del touch. ya que dentro de ISRtouch, la interrupcion de desactiva para no llamarla mas de una vez.
   activacionInterrupcionEncoder(); // debounce y activacion de la interrupcion del ENCODER
   resetDobliClick();
@@ -145,7 +162,7 @@ void loop()
 
     if ((timeSetCurrentAnt == 0) or ((timeSetCurrentAnt + (1000 / FPS_SET_CURRENT)) < millis())) // FRECUENCIA DE ACTUALIZACION DAC
     {
-      setCurrent(set.selCurrent);
+      setCurrent(set.selCurrent); // valor en ma
       timeSetCurrentAnt = millis();
     }
 
@@ -172,6 +189,8 @@ void loop()
     readTemps();
     powerCooler();
     readTempsAnt = millis();
+
+    /*
     Serial.print("Actual Current A = ");
     Serial.println(status.currents.currentA / 100.00);
     Serial.print("Actual Current B = ");
@@ -180,6 +199,7 @@ void loop()
     Serial.println(status.currents.currentTotal / 100.00);
     Serial.print("Actual Voltage");
     Serial.println(status.voltage);
+  */
   }
   //TFT_DibujaPantallaPrincipal(); // Dibuja la pntalla principal solo si paso el timeout (timeoutMenu)
 
@@ -187,6 +207,11 @@ void loop()
 
   if (X_Raw != 0 or Y_Raw != 0)
   {
+    //Serial.print("X = ");
+    //Serial.println(X_Raw);
+
+    //Serial.print("Y = ");
+    //Serial.println(Y_Raw);
     opcionTouch(X_Raw, Y_Raw);
   }
 }

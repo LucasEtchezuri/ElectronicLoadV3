@@ -28,15 +28,43 @@ void initSet(void)
 
 void setCurrent(long ma)
 {
+  int mvA = 0;
+  int mvB = 0;
   SPI.setDataMode(SPI_MODE0);
-  int mv = (ma * 2000.00 / 5000.00); // Obtengo mv necesarios para esos ma.
-  if (mv <= 0)
+
+  ma = ma * 10;
+
+  if ((ma + CORRECCION_MA_DAC) < 0)
   {
-    dac.setMillivolts(0);
+    ma = 0;
   }
   else
   {
-    dac.setMillivolts(mv);
+    ma = ma + CORRECCION_MA_DAC;
+  }
+
+  int mv = (ma * 2000.00 / 20000.00); // Obtengo mv necesarios para esos ma.
+  if (BALANCE_ENTRE_MOSFET >= 0)
+  {
+    mvA = mv + BALANCE_ENTRE_MOSFET;
+    mvB = mv - BALANCE_ENTRE_MOSFET;
+  }
+  else
+  {
+    float tmp = -1 * BALANCE_ENTRE_MOSFET;
+    mvA = mv - tmp;
+    mvB = mv + tmp;
+  }
+
+  if (mv <= 0)
+  {
+    dacA.setMillivolts(0);
+    dacB.setMillivolts(0);
+  }
+  else
+  {
+    dacA.setMillivolts10(mvA);
+    dacB.setMillivolts10(mvB);
   }
 
   SPI.setDataMode(SPI_MODE1);
@@ -78,7 +106,7 @@ void ISRencoder()
         {
           set.selCurrent = set.selCurrent - status.selUnidad; // decrementa POSICION en 1
         }
-        dibujaSet=true;
+        dibujaSet = true;
       }
     }
     else
@@ -106,7 +134,7 @@ void ISRencoder()
         {
           set.selCurrent = set.selCurrent + status.selUnidad;
         }
-        dibujaSet=true;
+        dibujaSet = true;
       }
     }
     encoderAnt = millis(); // guarda valor actualizado del tiempo
@@ -115,12 +143,8 @@ void ISRencoder()
 void ISRtouch()
 {
   detachInterrupt(TOUCH_IRQ);
-  X_Raw = touch.ReadRawY();
+  X_Raw = map(touch.ReadRawY(), 0, 4095, 4095, 0);
   Y_Raw = touch.ReadRawX();
-  //Serial.print("X = ");
-  //Serial.println(X_Raw);
-  //Serial.print("Y = ");
-  //Serial.println(Y_Raw);
   touchAnt = millis();
 }
 
@@ -128,6 +152,7 @@ void readCurrentsVoltage(void)
 {
   static byte adc_input = 0;
   static byte adc_reads = 0;
+  static long val = 0;
   static long suma = 0;
   SPI.setDataMode(SPI_MODE1);
 
@@ -135,7 +160,8 @@ void readCurrentsVoltage(void)
   {
     if (adc_input == 0)
     {
-      suma = suma + (adc.readADC() * MA_MAX / 32767.00 * 100.00);
+      val = adc.readADC();
+      suma = suma + (val * 2048.000 / 32767.000 / INA_MV_A * 10000.00 * 100.00);
       adc_reads++;
       if (adc_reads >= 50)
       {
@@ -149,12 +175,13 @@ void readCurrentsVoltage(void)
     }
     else if (adc_input == 1)
     {
-      suma = suma + (adc.readADC() * MA_MAX / 32767.00 * 100.00);
+      val = adc.readADC();
+      suma = suma + (val * 2048.000 / 32767.000 / INA_MV_A * 10000.00 * 100.00);
+
       adc_reads++;
       if (adc_reads >= 50)
       {
         status.currents.currentB = (suma / 50);
-        status.currents.currentB = 0;    //quitar cuando agrego el otro modulo
         status.currents.currentTotal = status.currents.currentA + status.currents.currentB;
         adc.setMultiplexer(0x05);
         adc_reads = 0;
@@ -246,19 +273,19 @@ void checkCutOffV(void)
 void powerCooler(void)
 {
   byte x = 0;
-  if (status.run)
+
+  x = constrain(status.temp, COOLER_TEMP_MIN - 1, COOLER_TEMP_MAX);
+  if (x == COOLER_TEMP_MIN - 1)
   {
-    x = map(status.temp, COOLER_TEMP_MIN, COOLER_TEMP_MAX, COOLER_POTENCIA_MINIMA, 255);
-    ledcWrite(0, x);
-    status.FanPower = map(x, COOLER_POTENCIA_MINIMA, 255, 1, 100);
+    ledcWrite(0, 0);
+    status.FanPower = 0;
   }
   else
   {
-    x = map(status.temp, COOLER_TEMP_MIN, COOLER_TEMP_MAX, COOLER_POTENCIA_MINIMA, 255);
+    x = map(x, COOLER_TEMP_MIN - 1, COOLER_TEMP_MAX, COOLER_POTENCIA_MINIMA, 255);
     ledcWrite(0, x);
     status.FanPower = map(x, COOLER_POTENCIA_MINIMA, 255, 1, 100);
   }
-  ledcWrite(0, 0);
 }
 
 void adjustCurrent(void)
@@ -267,4 +294,6 @@ void adjustCurrent(void)
 
 void readTemps(void)
 {
+  sensor.requestTemperatures();
+  status.temp = sensor.getTempC();
 }

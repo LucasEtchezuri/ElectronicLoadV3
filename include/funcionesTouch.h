@@ -89,8 +89,28 @@ void opcionTouch(int x, int y)
         {
             status.selUnidad = 1000;
             timeSelectionDigit = millis();
-            dibujaSet=true;
+            dibujaSet = true;
         }
+        if (checkTouch(SET_DECIMAL, x, y))
+        {
+            if (status.selUnidad == 1000 or status.selUnidad == 1)
+            {
+                status.selUnidad = 100;
+            }
+            else if (status.selUnidad == 100)
+            {
+                status.selUnidad = 10;
+            }
+            else if (status.selUnidad == 10)
+            {
+                status.selUnidad = 1;
+            }
+            
+            timeSelectionDigit = millis();
+            dibujaSet = true;
+        }
+
+        /*
         if (checkTouch(SET_AMPERE_100, x, y))
         {
             status.selUnidad = 100;
@@ -108,6 +128,7 @@ void opcionTouch(int x, int y)
             status.selUnidad = 1;
             dibujaSet=true;
         }
+        */
         if (checkTouch(SET_VOLTAJE_MINIMO, x, y))
         {
             if (dobleClickAnt == 0)
